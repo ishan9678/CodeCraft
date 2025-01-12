@@ -15,9 +15,10 @@ SYSTEM_PROMPT = PromptTemplate(
         "### Instructions:\n"
         "1. Ensure the code is syntactically correct and handles all edge cases.\n"
         "2. Include comments and docstrings for clarity.\n"
-        "3. Return only the code without any additional explanations or text.\n"
-        "4. Give only the required code, don't include any test cases or example usage.\n"
-        "5. The output should match the expected output for all test cases.\n"
+        "3. Print only the code without any additional explanations or text.\n"
+        "4. Do not include any test cases or example usage in the code.\n"
+        "5. Do not print the expected outputs or test cases, only print the output.\n"
+        "6. Ensure the code prints the output from the input passed, as it will be sent to a compiler for validation.\n"
     )
 )
 
@@ -35,6 +36,8 @@ REFINE_PROMPT = PromptTemplate(
         "2. Fix any syntax errors, logical errors, or edge cases.\n"
         "3. Ensure the refined code passes all provided test cases.\n"
         "4. Return only the fixed code without any additional explanations or text.\n"
+        "5. Do not include any test cases or example usage in the code.\n"
+        "6. Ensure the code prints the output from the input passed, as it will be sent to a compiler for validation.\n"
     )
 )
 
@@ -47,7 +50,7 @@ VALIDATE_TEST_CASES_PROMPT = PromptTemplate(
         "### Instructions:\n"
         "1. Compare the actual output with the expected output for each test case.\n"
         "2. Return the validation results in the following JSON format:\n"
-        "3. Do not provide code, you job is just to compare the outputs.\n"
+        "3. Do not provide code, your job is just to compare the outputs.\n"
         "4. Just return the validation results without any additional explanations or text.\n"
         "{format_instructions}\n"
     ),

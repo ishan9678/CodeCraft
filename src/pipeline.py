@@ -2,9 +2,10 @@ import re
 import logging
 from typing import List, Dict, Any
 from models import CodeExecutionResult, CodeIterationHistory, PipelineResult, TestCase
-from executor import execute_code, validate_test_cases
+from executor import execute_code
 from generator import CodeGenerator
-from prompts import SYSTEM_PROMPT, REFINE_PROMPT
+from prompts import SYSTEM_PROMPT, REFINE_PROMPT, VALIDATE_TEST_CASES_PROMPT
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -45,29 +46,48 @@ class CodeGenerationPipeline:
             # Execute the code with user input (if provided)
             execution_result = await execute_code(current_code, language, user_input)
             
-            # Validate test cases
-            test_results = await validate_test_cases(current_code, language, test_cases)
+            # Validate test cases using the LLM
+            test_case_results = []
+            for test_case in test_cases:
+                test_case_result = await execute_code(current_code, language, test_case.input)
+                test_case_results.append({
+                    "input": test_case.input,
+                    "expected_output": test_case.expected_output,
+                    "actual_output": test_case_result.output,
+                    "error": test_case_result.error
+                })
+            
+            # Pass test case results to the LLM for validation
+            test_results = self.generator.validate_test_cases(json.dumps(test_case_results))
+            
+            # Convert TestCaseResult objects to dictionaries
+            test_results_dicts = [result.dict() for result in test_results.test_results]
             
             # Store iteration history
             history.append(CodeIterationHistory(
                 iteration=iteration + 1,
                 code=current_code,
                 execution_result=execution_result,
-                test_results=test_results
+                test_results=test_results_dicts  # Pass the list of dictionaries here
             ))
             
             # Check if all test cases passed
-            if all(test_case["passed"] for test_case in test_results):
+            if all(test_case.passed for test_case in test_results.test_results):
                 logger.info("All test cases passed. Stopping pipeline.")
                 break
             
             iteration += 1
         
+        # Convert TestCaseResult objects to dictionaries for PipelineResult
+        final_test_results_dicts = [result.dict() for result in test_results.test_results]
+        
         return PipelineResult(
             final_code=current_code,
             final_result=execution_result,
-            test_results=test_results,
+            test_results=final_test_results_dicts,  # Pass the list of dictionaries here
             iterations=iteration + 1,
             history=history,
-            success=all(test_case["passed"] for test_case in test_results)
+            success=all(test_case.passed for test_case in test_results.test_results)
         )
+        
+        

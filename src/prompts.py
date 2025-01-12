@@ -16,6 +16,8 @@ SYSTEM_PROMPT = PromptTemplate(
         "1. Ensure the code is syntactically correct and handles all edge cases.\n"
         "2. Include comments and docstrings for clarity.\n"
         "3. Return only the code without any additional explanations or text.\n"
+        "4. Give only the required code, don't include any test cases or example usage.\n"
+        "5. The output should match the expected output for all test cases.\n"
     )
 )
 

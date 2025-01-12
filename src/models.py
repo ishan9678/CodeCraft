@@ -1,9 +1,18 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
+class TestCaseResult(BaseModel):
+    input: str = Field(description="Input for the test case")
+    expected_output: Optional[str] = Field(description="Expected output for the test case")
+    actual_output: Optional[str] = Field(description="Actual output from the code execution")
+    passed: bool = Field(description="Whether the test case passed")
+
+class TestCaseValidationResult(BaseModel):
+    test_results: List[TestCaseResult] = Field(description="List of test case validation results")
 
 class TestCase(BaseModel):
     input: str = Field(description="Input for the test case")
-    expected_output: str = Field(description="Expected output for the test case")
+    expected_output: Optional[str] = Field(description="Expected output for the test case (can be None for invalid inputs)")
 
 class CodeExecutionResult(BaseModel):
     output: str = Field(description="The output of the code execution")

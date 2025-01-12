@@ -6,6 +6,7 @@ class TestCaseResult(BaseModel):
     expected_output: Optional[str] = Field(description="Expected output for the test case")
     actual_output: Optional[str] = Field(description="Actual output from the code execution")
     passed: bool = Field(description="Whether the test case passed")
+    error: Optional[str] = Field(description="Any error messages from the execution")  # Add this field
 
 class TestCaseValidationResult(BaseModel):
     test_results: List[TestCaseResult] = Field(description="List of test case validation results")
@@ -22,12 +23,12 @@ class CodeIterationHistory(BaseModel):
     iteration: int = Field(description="The iteration number")
     code: str = Field(description="The generated or refined code")
     execution_result: CodeExecutionResult = Field(description="The result of the code execution")
-    test_results: List[Dict[str, Any]] = Field(description="Results of test case validation")
+    test_results: List[TestCaseResult] = Field(description="Results of test case validation")
 
 class PipelineResult(BaseModel):
     final_code: str = Field(description="The final generated or refined code")
     final_result: CodeExecutionResult = Field(description="The final execution result")
-    test_results: List[Dict[str, Any]] = Field(description="Results of test case validation")
+    test_results: List[TestCaseResult] = Field(description="Results of test case validation")
     iterations: int = Field(description="Total number of iterations")
     history: List[CodeIterationHistory] = Field(description="History of all iterations")
     success: bool = Field(description="Whether the pipeline was successful")

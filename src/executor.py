@@ -5,25 +5,37 @@ from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-async def execute_code(code: str, language: str, user_input: str = "") -> CodeExecutionResult:
-    """Execute code using the compiler API"""
+async def execute_code(code: str, language: str, input_json: str = "{}") -> CodeExecutionResult:
+    """
+    Execute the code using an external API.
+    """
     url = 'https://api.codex.jaagrav.in'
     payload = {
         'code': code,
         'language': language,
-        'input': user_input
+        'input': input_json  # Pass input as a JSON string
     }
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
+    logger.info(f"payload: {payload}")
+
     
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(url, data=payload, headers=headers)
-            if response.status_code == 200:
-                response_data = response.json()
-                return CodeExecutionResult(output=response_data.get('output', ''), error=response_data.get('error', ''))
-            return CodeExecutionResult(output='', error=f"HTTP Error: {response.status_code}")
-        except Exception as e:
-            return CodeExecutionResult(output='', error=f"Execution Error: {str(e)}")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, data=payload, headers=headers, timeout=30)  # Add timeout
+            response.raise_for_status()  # Raise HTTP errors
+            response_data = response.json()
+            logger.info(f"Response data: {response_data}")
+            return CodeExecutionResult(
+                output=response_data.get('output', '').strip(),
+                error=response_data.get('error', '').strip()
+            )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error occurred: {e}")
+        return CodeExecutionResult(output='', error=f"HTTP Error: {e.response.status_code}")
+    except Exception as e:
+        logger.error(f"Execution error occurred: {e}")
+        return CodeExecutionResult(output='', error=f"Execution Error: {str(e)}")
 
 async def validate_test_cases(code: str, language: str, test_cases: List[TestCase]) -> List[Dict[str, Any]]:
     """Validate the code against all test cases"""

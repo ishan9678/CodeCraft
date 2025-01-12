@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from prompts import SYSTEM_PROMPT, REFINE_PROMPT, VALIDATE_TEST_CASES_PROMPT
 from langchain.output_parsers import PydanticOutputParser
 from models import TestCaseValidationResult
-import logging  
+import logging
 import re
 
 logger = logging.getLogger(__name__)
@@ -24,24 +24,23 @@ class CodeGenerator:
         )
         return response.choices[0].message.content
 
-    def generate_initial_code(self, language: str, question: str, test_cases: str, explanation: str) -> str:
-        """Generate initial code."""
+    def generate_initial_code(self, language: str, question: str, test_cases: List[Dict[str, Any]], explanation: str) -> str:
+        """Generate initial code that reads JSON input."""
         prompt = SYSTEM_PROMPT.format(
             language=language,
             question=question,
-            test_cases=test_cases,
+            test_cases=json.dumps(test_cases),  # Serialize test cases to JSON
             explanation=explanation
         )
         return self.generate_response(prompt)
 
-    def refine_code(self, language: str, code: str, results: str, error: str, test_cases: str) -> str:
-        """Refine code."""
+    def refine_code(self, language: str, code: str, results: str, error: str, test_cases: List[Dict[str, Any]]) -> str:
         prompt = REFINE_PROMPT.format(
             language=language,
             code=code,
             results=results,
             error=error,
-            test_cases=test_cases
+            test_cases=json.dumps(test_cases)  # Serialize test cases to JSON
         )
         return self.generate_response(prompt)
 
@@ -59,4 +58,3 @@ class CodeGenerator:
         except Exception as e:
             logger.error(f"Failed to parse LLM response: {e}")
             raise ValueError("Failed to parse LLM response as JSON.")
-

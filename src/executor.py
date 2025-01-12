@@ -1,6 +1,7 @@
 import httpx
 import logging
 from models import CodeExecutionResult, TestCase
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 

@@ -13,9 +13,10 @@ class CodeGenerationPipeline:
         self.generator = CodeGenerator(api_key=api_key, base_url=base_url)
         self.max_iterations = max_iterations
 
-    def clean_code(self, code: str) -> str:
+    def clean_code(self, code: str, language: str) -> str:
         """Remove Markdown formatting from the generated code."""
-        code = re.sub(r'```(python)?\s*', '', code)
+        escaped_language = re.escape(language)
+        code = re.sub(rf'```{escaped_language}\s*', '', code)
         code = re.sub(r'\s*```\s*', '', code)
         return code.strip()
 
@@ -44,7 +45,7 @@ class CodeGenerationPipeline:
                 current_code = self.generator.refine_code(language, current_code, execution_result.output, execution_result.error, test_cases_dict)
             
             # Clean the code
-            current_code = self.clean_code(current_code)
+            current_code = self.clean_code(current_code, language=language)
             
             # Execute the code with user input (if provided)
             execution_result = await execute_code(current_code, language, user_input)

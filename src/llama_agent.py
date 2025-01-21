@@ -3,6 +3,12 @@ import asyncio
 import logging
 from models import TestCase
 from pipeline import CodeGenerationPipeline
+import os
+
+api_key = os.getenv("API_KEY")
+if not api_key:
+    raise ValueError("API_KEY is not set in the environment variables")
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -74,7 +80,7 @@ with st.expander("Manage Test Cases", expanded=True):
 # Run pipeline button
 if st.button("Run Pipeline"):
     pipeline = CodeGenerationPipeline(
-        api_key="",
+        api_key=api_key,
         base_url="https://api.groq.com/openai/v1",
         max_iterations=max_iterations
     )

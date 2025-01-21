@@ -6,7 +6,7 @@ class TestCaseResult(BaseModel):
     expected_output: Optional[str] = Field(description="Expected output for the test case")
     actual_output: Optional[str] = Field(description="Actual output from the code execution")
     passed: bool = Field(description="Whether the test case passed")
-    error: Optional[str] = Field(description="Any error messages from the execution")  # Add this field
+    error: Optional[int] = Field(description="Boolean value indicating whether an error occurred during execution")
 
 class TestCaseValidationResult(BaseModel):
     test_results: List[TestCaseResult] = Field(description="List of test case validation results")
@@ -17,7 +17,7 @@ class TestCase(BaseModel):
 
 class CodeExecutionResult(BaseModel):
     output: str = Field(description="The output of the code execution")
-    error: str = Field(description="Any error messages from the execution")
+    error: int = Field(description="Boolean value indicating whether an error occurred during execution")
 
 class CodeIterationHistory(BaseModel):
     iteration: int = Field(description="The iteration number")

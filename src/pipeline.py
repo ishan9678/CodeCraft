@@ -1,7 +1,7 @@
 import re
 import logging
 from typing import List, Dict, Any
-from models import CodeExecutionResult, CodeIterationHistory, PipelineResult, TestCase, TestCaseResult
+from models import CodeIterationHistory, PipelineResult, TestCase, TestCaseResult
 from executor import execute_code
 from generator import CodeGenerator
 import json
@@ -26,7 +26,7 @@ class CodeGenerationPipeline:
         question: str,
         test_cases: List[TestCase],
         explanation: str,
-        user_input: str = "{}"  # Default to empty JSON object
+        user_input: str = "" 
     ) -> PipelineResult:
         """Run the complete code generation and refinement pipeline."""
         iteration = 0

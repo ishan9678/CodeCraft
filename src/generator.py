@@ -17,7 +17,7 @@ class CodeGenerator:
     def generate_response(self, prompt: str) -> str:
         """Generate response using SambaNova API."""
         response = self.client.chat.completions.create(
-            model='Meta-Llama-3.3-70B-Instruct',
+            model='llama-3.3-70b-specdec',
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             top_p=0.1

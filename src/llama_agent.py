@@ -12,14 +12,12 @@ st.title("CodeCraft")
 
 # Language mapping
 LANGUAGE_MAPPING = {
-    "python": "py",
-    "javascript": "js",
+    "python": "python",
+    "javascript": "nodejs",
     "cpp": "cpp",
     "c++": "cpp",
     "c": "c",
     "java": "java",
-    "golang": "go",
-    "go": "go"
 }
 
 # Main input fields
@@ -77,7 +75,7 @@ with st.expander("Manage Test Cases", expanded=True):
 if st.button("Run Pipeline"):
     pipeline = CodeGenerationPipeline(
         api_key="",
-        base_url="https://api.sambanova.ai/v1",
+        base_url="https://api.groq.com/openai/v1",
         max_iterations=max_iterations
     )
 
@@ -106,12 +104,12 @@ if st.button("Run Pipeline"):
     st.subheader("Test Case Results")
     for i, test_result in enumerate(result.test_results):
         st.write(f"### Test Case {i + 1}")
-        st.write(f"**Input:** {test_result['input']}")
-        st.write(f"**Expected Output:** {test_result['expected_output']}")
-        st.write(f"**Actual Output:** {test_result['actual_output']}")
-        st.write(f"**Passed:** {test_result['passed']}")
-        if test_result.get('error'):
-            st.write(f"**Error:** {test_result['error']}")
+        st.write(f"**Input:** {test_result.input}")  # Use dot notation
+        st.write(f"**Expected Output:** {test_result.expected_output}")  # Use dot notation
+        st.write(f"**Actual Output:** {test_result.actual_output}")  # Use dot notation
+        st.write(f"**Passed:** {test_result.passed}")  # Use dot notation
+        if test_result.error:  # Use dot notation
+            st.write(f"**Error:** {test_result.error}")
         st.write("---")
 
     st.subheader("Pipeline Metadata")

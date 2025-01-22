@@ -17,6 +17,13 @@ LANGUAGE_IDS = {
     "c": 50,
     "javascript": 63,
     "java": 62,
+    "ruby": 72,
+    "rust": 73,
+    "r": 80,
+    "go": 60,
+    "swift": 83,
+    "typescript": 74,
+    "php": 68,
 }
 
 async def execute_code(code: str, language: str, input: str) -> CodeExecutionResult:

@@ -21,11 +21,18 @@ st.title("CodeCraft")
 
 # Language mapping
 LANGUAGE_MAPPING = {
-    "python": "python",
-    "javascript": "javascript",
-    "c++": "cpp",
-    "c": "c",
-    "java": "java",
+    "Python": "python",
+    "Javascript": "javascript",
+    "C++": "cpp",
+    "C": "c",
+    "Java": "java",
+    "Ruby": "ruby",
+    "Rust": "rust",
+    "R": "r",
+    "Go": "go",
+    "Swift": "swift",
+    "Typescript": "typescript",
+    "PHP": "php",
 }
 
 # Main input fields

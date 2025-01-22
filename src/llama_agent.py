@@ -16,10 +16,6 @@ if not api_key:
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Streamlit app title
-st.title("CodeCraft")
-
-# Language mapping
 LANGUAGE_MAPPING = {
     "Python": "python",
     "Javascript": "javascript",
@@ -34,6 +30,23 @@ LANGUAGE_MAPPING = {
     "Typescript": "typescript",
     "PHP": "php",
 }
+
+model_ids = [
+    "llama-3.3-70b-specdec",
+    "llama-3.1-8b-instant",
+    "llama-3.2-3b-preview",
+    "llama-3.1-70b-versatile",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it"
+]
+
+st.title("CodeCraft")
+
+selected_model = st.selectbox(
+    'Select a model:',
+    model_ids
+)
 
 # Main input fields
 question = st.text_area(
@@ -97,6 +110,7 @@ if st.button("Run Pipeline"):
     # Run the pipeline asynchronously
     async def run_pipeline_async():
         return await pipeline.run_pipeline(
+            model = selected_model,
             language=language_code,
             question=question,
             test_cases=test_cases,

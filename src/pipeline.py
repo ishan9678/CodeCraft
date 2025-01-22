@@ -22,6 +22,7 @@ class CodeGenerationPipeline:
 
     async def run_pipeline(
         self,
+        model: str,
         language: str,
         question: str,
         test_cases: List[TestCase],
@@ -38,11 +39,11 @@ class CodeGenerationPipeline:
             if current_code is None:
                 # Serialize test cases to dictionaries
                 test_cases_dict = [test_case.dict() for test_case in test_cases]
-                current_code = self.generator.generate_initial_code(language, question, test_cases_dict, explanation)
+                current_code = self.generator.generate_initial_code(model, language, question, test_cases_dict, explanation)
             else:
                 # Serialize test cases to dictionaries before passing to refine_code
                 test_cases_dict = [test_case.dict() for test_case in test_cases]
-                current_code = self.generator.refine_code(language, current_code, execution_result.output, execution_result.error, test_cases_dict)
+                current_code = self.generator.refine_code(model, language, current_code, execution_result.output, execution_result.error, test_cases_dict)
             
             # Clean the code
             current_code = self.clean_code(current_code, language=language)
@@ -64,7 +65,7 @@ class CodeGenerationPipeline:
                 ))
             
             # Pass test case results to the LLM for validation
-            test_results = self.generator.validate_test_cases(json.dumps([result.dict() for result in test_case_results]))
+            test_results = self.generator.validate_test_cases(model, json.dumps([result.dict() for result in test_case_results]))
             
             # Store iteration history
             history.append(CodeIterationHistory(

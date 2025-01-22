@@ -49,11 +49,12 @@ async def execute_code(code: str, language: str, input: str) -> CodeExecutionRes
             response_data = response.json()
             logger.info(f"Response data: {response_data}")
             
-            # Handle stderr which can be null or a string
+         
             stderr = response_data['stderr'] if response_data['stderr'] is not None else ''
+            stdout = response_data['stdout'] if response_data['stdout'] is not None else ''
             
             return CodeExecutionResult(
-                output=response_data['stdout'],
+                output=stdout,
                 error=stderr
             )
     except httpx.HTTPStatusError as e:

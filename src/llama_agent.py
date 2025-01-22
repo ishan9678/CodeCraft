@@ -3,9 +3,12 @@ import asyncio
 import logging
 from models import TestCase
 from pipeline import CodeGenerationPipeline
+from dotenv import load_dotenv
 import os
 
-api_key = os.getenv("API_KEY")
+load_dotenv()
+
+api_key = os.getenv('API_KEY')
 if not api_key:
     raise ValueError("API_KEY is not set in the environment variables")
 
@@ -18,12 +21,18 @@ st.title("CodeCraft")
 
 # Language mapping
 LANGUAGE_MAPPING = {
-    "python": "python",
-    "javascript": "nodejs",
-    "cpp": "cpp",
-    "c++": "cpp",
-    "c": "c",
-    "java": "java",
+    "Python": "python",
+    "Javascript": "javascript",
+    "C++": "cpp",
+    "C": "c",
+    "Java": "java",
+    "Ruby": "ruby",
+    "Rust": "rust",
+    "R": "r",
+    "Go": "go",
+    "Swift": "swift",
+    "Typescript": "typescript",
+    "PHP": "php",
 }
 
 # Main input fields

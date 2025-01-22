@@ -2,38 +2,66 @@ import httpx
 import logging
 from models import CodeExecutionResult, TestCase
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_url = os.getenv('COMPILER_API_ENDPOINT')
 
 logger = logging.getLogger(__name__)
 
+LANGUAGE_IDS = {
+    "python": 71,
+    "cpp": 54,
+    "c": 50,
+    "javascript": 63,
+    "java": 62,
+    "ruby": 72,
+    "rust": 73,
+    "r": 80,
+    "go": 60,
+    "swift": 83,
+    "typescript": 74,
+    "php": 68,
+}
+
 async def execute_code(code: str, language: str, input: str) -> CodeExecutionResult:
     """
-    Execute the code using an external API.
+    Execute the code using the Judge0 API.
     """
-    url = 'https://dev-coderunner-q4twihl4ya-as.a.run.app/api/execute'
+    url = f"{api_url}/submissions/?base64_encoded=false&wait=true"
+
+    language_id = LANGUAGE_IDS.get(language.lower())
+    if not language_id:
+        raise ValueError(f"Unsupported language: {language}")
+    
     payload = {
-        'script': code,
-        'language': language,
+        'source_code': code,
+        'language_id': language_id,
+        'stdin': input
     }
-    if input:
-        payload['stdin'] = input
-    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjWm5DVEk0RE5lUENwMjNuYWROei1BQmF0MGJ1dDgwTkctMDhOeHR2eFBvIn0.eyJleHAiOjE3Mzc3ODUzMTcsImlhdCI6MTczNzUyNjExNywiYXV0aF90aW1lIjoxNzM3NTI2MTE3LCJqdGkiOiIwYWU3MzM5OS0yOWJjLTQzMTQtOTFkNS0zNDViNzgzZjAxODciLCJpc3MiOiJodHRwczovL2F1dGgua2Fsdml1bS5jb21tdW5pdHkvYXV0aC9yZWFsbXMva2Fsdml1bS1kZXYiLCJzdWIiOiIzMzMxYTJhOS0xODEwLTQ0ZGYtOWQ2My04YzFjYzRlZjU4MjkiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ0ZXN0LW5leHRqcy1hcHAiLCJzZXNzaW9uX3N0YXRlIjoiNTAzNTdkNzItYTg1Yi00NzY0LWEyMWYtNDlkZDg2MzY1NDI1IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWthbHZpdW0tZGV2IiwiZWFybHktYWNjZXNzIiwibWVudG9yIiwic3R1ZGVudHBsdXMiLCJzdHVkZW50IiwiYXV0aG9yIl19LCJzY29wZSI6Im9wZW5pZCBtYWNoaW5lLXJvbGUgZW1haWwgcHJvZmlsZSByb2xlcyIsInNpZCI6IjUwMzU3ZDcyLWE4NWItNDc2NC1hMjFmLTQ5ZGQ4NjM2NTQyNSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiSXNoYW4gUyIsInByZWZlcnJlZF91c2VybmFtZSI6ImlzaGFuLnNAa2Fsdml1bS5jb20iLCJnaXZlbl9uYW1lIjoiSXNoYW4iLCJmYW1pbHlfbmFtZSI6IlMiLCJlbWFpbCI6ImlzaGFuLnNAa2Fsdml1bS5jb20ifQ.Ytg-Wrj59BFKcDZX7ildMYAuWLXEjJns5ijQHEnL6Q8BGwBtsUBRm9qwZ-Wl8Mtaibwrgyw0cxH0KRMNLls-z7xvRX4Xy8FPnUbublkR2SLaC2I4Xtp2FFy7i-kublizYGwD9yA-YJbj2icMAGoBC28MIPSdzXmVnvBCSOVXxzJbNn2T-przcVwoZCT_wQoGok4mwmotlv-rpN_yGKazMtqiZCY-w5FY5u_6N25bZpJOHanrbQ7xaldwB2WpDdKrLVramc9-5VxP5lQklOMxYlQILj2pzxCScfFKGxjpeyEFMcq8YROCwS3sEKF2r4ETFbSRXqSBvbBLVYHW7oDz5A'}
     
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, data=payload, headers=headers, timeout=30)  # Add timeout
+            response = await client.post(url, json=payload, timeout=30)
             response.raise_for_status()  # Raise HTTP errors
             response_data = response.json()
             logger.info(f"Response data: {response_data}")
+            
+            # Handle stderr which can be null or a string
+            stderr = response_data['stderr'] if response_data['stderr'] is not None else ''
+            
             return CodeExecutionResult(
-                output=response_data['output'],
-                error=response_data['error']
+                output=response_data['stdout'],
+                error=stderr
             )
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error occurred: {e}")
-        return CodeExecutionResult(output='', error=2)
+        return CodeExecutionResult(output='', error=f"HTTP error: {e}")  
     except Exception as e:
         logger.error(f"Execution error occurred: {e}")
-        return CodeExecutionResult(output='', error=3)
+        return CodeExecutionResult(output='', error=f"Execution error: {e}")
 
 async def validate_test_cases(code: str, language: str, test_cases: List[TestCase]) -> List[Dict[str, Any]]:
     """Validate the code against all test cases"""

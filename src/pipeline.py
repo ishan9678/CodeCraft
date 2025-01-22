@@ -60,7 +60,7 @@ class CodeGenerationPipeline:
                     expected_output=test_case.expected_output,
                     actual_output=test_case_result.output,
                     passed=passed,
-                    error=test_case_result.error  # Populate the error field
+                    error=test_case_result.error
                 ))
             
             # Pass test case results to the LLM for validation
@@ -84,7 +84,7 @@ class CodeGenerationPipeline:
         return PipelineResult(
             final_code=current_code,
             final_result=execution_result,
-            test_results=test_case_results,  # Pass the list of TestCaseResult objects
+            test_results=test_case_results,
             iterations=iteration + 1,
             history=history,
             success=all(test_case.passed for test_case in test_case_results)

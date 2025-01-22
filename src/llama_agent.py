@@ -22,8 +22,7 @@ st.title("CodeCraft")
 # Language mapping
 LANGUAGE_MAPPING = {
     "python": "python",
-    "javascript": "nodejs",
-    "cpp": "cpp",
+    "javascript": "javascript",
     "c++": "cpp",
     "c": "c",
     "java": "java",

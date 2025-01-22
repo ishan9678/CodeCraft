@@ -3,9 +3,12 @@ import asyncio
 import logging
 from models import TestCase
 from pipeline import CodeGenerationPipeline
+from dotenv import load_dotenv
 import os
 
-api_key = os.getenv("API_KEY")
+load_dotenv()
+
+api_key = os.getenv('API_KEY')
 if not api_key:
     raise ValueError("API_KEY is not set in the environment variables")
 

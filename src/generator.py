@@ -1,7 +1,7 @@
 import json
 from openai import OpenAI
 from typing import List, Dict, Any
-from prompts import SYSTEM_PROMPT, REFINE_PROMPT, VALIDATE_TEST_CASES_PROMPT
+from prompts import SYSTEM_PROMPT, REFINE_PROMPT, TEST_CASE_GENERATION_PROMPT, VALIDATE_TEST_CASES_PROMPT
 from langchain.output_parsers import PydanticOutputParser
 from models import TestCaseValidationResult
 import logging
@@ -55,6 +55,34 @@ class CodeGenerator:
 
         try:
             return self.output_parser.parse(clean_response)
+        except Exception as e:
+            logger.error(f"Failed to parse LLM response: {e}")
+            raise ValueError("Failed to parse LLM response as JSON.")
+
+    def generate_test_cases(self, model: str, language: str, question: str, explanation: str) -> List[Dict[str, Any]]:
+        """Generate test cases using the LLM."""
+        prompt = TEST_CASE_GENERATION_PROMPT.format(
+            language=language,
+            question=question,
+            explanation=explanation
+        )
+        response = self.generate_response(prompt, model)
+        
+        # Clean the response to remove unnecessary markdown or other noise
+        clean_response = re.sub(r'```(json)?\s*', '', response)
+        clean_response = re.sub(r'\s*```\s*', '', clean_response)
+
+        # Debugging: Print the cleaned response
+        print("Cleaned LLM Response:", clean_response)
+
+        try:
+            # Parse the response into a list of dictionaries
+            test_cases = json.loads(clean_response)
+            
+            # Debugging: Print the parsed test cases
+            print("Parsed Test Cases:", test_cases)
+            
+            return test_cases
         except Exception as e:
             logger.error(f"Failed to parse LLM response: {e}")
             raise ValueError("Failed to parse LLM response as JSON.")

@@ -78,6 +78,9 @@ max_iterations = st.slider("Max Iterations", min_value=1, max_value=5, value=3, 
 # Test cases input
 st.header("Test Cases")
 
+# Option to generate test cases automatically
+generate_test_cases = st.checkbox("Generate Test Cases Automatically", value=True, help="Automatically generate test cases based on the problem statement.")
+
 # Initialize session state to store test cases
 if "test_cases" not in st.session_state:
     st.session_state.test_cases = [{"input": "", "expected_output": ""}]  # Start with one test case
@@ -88,16 +91,19 @@ def add_test_case():
 
 # Collapsible section for test cases
 with st.expander("Manage Test Cases", expanded=True):
-    # Display test cases
-    test_cases = []
-    for i, test_case in enumerate(st.session_state.test_cases):
-        st.subheader(f"Test Case {i + 1}")
-        input_data = st.text_input(f"Input {i + 1}", value=test_case["input"], key=f"input_{i}", help="Input for the test case.")
-        expected_output = st.text_input(f"Expected Output {i + 1}", value=test_case["expected_output"], key=f"expected_output_{i}", help="Expected output for the test case.")
-        test_cases.append(TestCase(input=input_data, expected_output=expected_output))
+    if not generate_test_cases:
+        # Display test cases
+        test_cases = []
+        for i, test_case in enumerate(st.session_state.test_cases):
+            st.subheader(f"Test Case {i + 1}")
+            input_data = st.text_input(f"Input {i + 1}", value=test_case["input"], key=f"input_{i}", help="Input for the test case.")
+            expected_output = st.text_input(f"Expected Output {i + 1}", value=test_case["expected_output"], key=f"expected_output_{i}", help="Expected output for the test case.")
+            test_cases.append(TestCase(input=input_data, expected_output=expected_output))
 
-    # Button to add more test cases
-    st.button("Add Test Case", on_click=add_test_case)
+        # Button to add more test cases
+        st.button("Add Test Case", on_click=add_test_case)
+    else:
+        test_cases = []
 
 # Run pipeline button
 if st.button("Run Pipeline"):

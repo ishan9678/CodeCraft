@@ -34,6 +34,11 @@ class CodeGenerationPipeline:
         current_code = None
         history = []
         
+        # Generate test cases if none are provided
+        if not test_cases:
+            test_cases_dict = self.generator.generate_test_cases(model, language, question, explanation)
+            test_cases = [TestCase(**test_case) for test_case in test_cases_dict]
+        
         while iteration < self.max_iterations:
             # Generate or refine code
             if current_code is None:

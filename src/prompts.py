@@ -56,3 +56,18 @@ VALIDATE_TEST_CASES_PROMPT = PromptTemplate(
     ),
     partial_variables={"format_instructions": output_parser.get_format_instructions()}
 )
+
+TEST_CASE_GENERATION_PROMPT = PromptTemplate(
+    input_variables=["question", "explanation"],
+    template=(
+    "You are an expert software engineer. Generate a set of test cases for the following problem:\n\n"
+    "### Problem:\n{question}\n\n"
+    "### Explanation:\n{explanation}\n\n"
+    "### Instructions:\n"
+    "1. Generate at least 5 test cases that cover various scenarios, including edge cases.\n"
+    "2. For each test case, provide the input and the expected output.\n"
+    "3. Return the test cases in JSON format as a list of objects with 'input' and 'expected_output' fields.\n"
+    "4. input and expected_output should be strings.\n"
+    "5. Do not include any additional explanations or text.\n"
+    ),
+)

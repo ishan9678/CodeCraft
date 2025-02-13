@@ -40,52 +40,72 @@ class CodeGenerationPipeline:
             test_cases = [TestCase(**test_case) for test_case in test_cases_dict]
         
         while iteration < self.max_iterations:
-            # Generate or refine code
-            if current_code is None:
-                # Serialize test cases to dictionaries
-                test_cases_dict = [test_case.dict() for test_case in test_cases]
-                current_code = self.generator.generate_initial_code(model, language, question, test_cases_dict, explanation)
-            else:
-                # Serialize test cases to dictionaries before passing to refine_code
-                test_cases_dict = [test_case.dict() for test_case in test_cases]
-                current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.error, test_cases_dict)
-            
-            # Clean the code
-            current_code = self.clean_code(current_code, language=language)
-            
-            # Execute the code with user input (if provided)
-            execution_result = await execute_code(current_code, language, user_input)
-            
-            # Validate test cases
-            test_case_results = []
-            for test_case in test_cases:
-                test_case_result = await execute_code(current_code, language, test_case.input)
-                passed = test_case_result.output.strip() == test_case.expected_output.strip() if test_case.expected_output else False
-                test_case_results.append(TestCaseResult(
-                    input=test_case.input,
-                    expected_output=test_case.expected_output,
-                    actual_output=test_case_result.output,
-                    passed=passed,
-                    error=test_case_result.error
+            try:
+                # Generate or refine code
+                if current_code is None:
+                    # Serialize test cases to dictionaries
+                    test_cases_dict = [test_case.dict() for test_case in test_cases]
+                    current_code = self.generator.generate_initial_code(model, language, question, test_cases_dict, explanation)
+                else:
+                    # Serialize test cases to dictionaries before passing to refine_code
+                    test_cases_dict = [test_case.dict() for test_case in test_cases]
+                    current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.error, test_cases_dict)
+                
+                # Clean the code
+                current_code = self.clean_code(current_code, language=language)
+                
+                # Execute the code with user input (if provided)
+                execution_result = await execute_code(current_code, language, user_input)
+                
+                # Validate test cases
+                test_case_results = []
+                for test_case in test_cases:
+                    test_case_result = await execute_code(current_code, language, test_case.input)
+                    passed = test_case_result.output.strip() == test_case.expected_output.strip() if test_case.expected_output else False
+                    test_case_results.append(TestCaseResult(
+                        input=test_case.input,
+                        expected_output=test_case.expected_output,
+                        actual_output=test_case_result.output,
+                        passed=passed,
+                        error=test_case_result.error
+                    ))
+                
+                # Pass test case results to the LLM for validation
+                test_results = self.generator.validate_test_cases(model, json.dumps([result.dict() for result in test_case_results]))
+                
+                # Store iteration history
+                history.append(CodeIterationHistory(
+                    iteration=iteration + 1,
+                    code=current_code,
+                    execution_result=execution_result,
+                    test_results=test_case_results  # Pass the list of TestCaseResult objects
                 ))
+                
+                # Check if all test cases passed
+                if all(test_case.passed for test_case in test_case_results):
+                    logger.info("All test cases passed. Stopping pipeline.")
+                    break
+                
+                iteration += 1
             
-            # Pass test case results to the LLM for validation
-            test_results = self.generator.validate_test_cases(model, json.dumps([result.dict() for result in test_case_results]))
-            
-            # Store iteration history
-            history.append(CodeIterationHistory(
-                iteration=iteration + 1,
-                code=current_code,
-                execution_result=execution_result,
-                test_results=test_case_results  # Pass the list of TestCaseResult objects
-            ))
-            
-            # Check if all test cases passed
-            if all(test_case.passed for test_case in test_case_results):
-                logger.info("All test cases passed. Stopping pipeline.")
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error occurred: {e}")
+                history.append(CodeIterationHistory(
+                    iteration=iteration + 1,
+                    code=current_code,
+                    execution_result=CodeExecutionResult(output='', error=f"HTTP error: {e}"),
+                    test_results=[]
+                ))
                 break
-            
-            iteration += 1
+            except Exception as e:
+                logger.error(f"Execution error occurred: {e}")
+                history.append(CodeIterationHistory(
+                    iteration=iteration + 1,
+                    code=current_code,
+                    execution_result=CodeExecutionResult(output='', error=f"Execution error: {e}"),
+                    test_results=[]
+                ))
+                break
         
         return PipelineResult(
             final_code=current_code,

@@ -34,9 +34,10 @@ class CodeGenerator:
         )
         return self.generate_response(prompt, model)
 
-    def refine_code(self, model:str, language: str, code: str, results: str, error: str, test_cases: List[Dict[str, Any]]) -> str:
+    def refine_code(self, model:str, language: str, question: str, code: str, results: str, error: str, test_cases: List[Dict[str, Any]]) -> str:
         prompt = REFINE_PROMPT.format(
             language=language,
+            question=question,
             code=code,
             results=results,
             error=error,
@@ -72,15 +73,9 @@ class CodeGenerator:
         clean_response = re.sub(r'```(json)?\s*', '', response)
         clean_response = re.sub(r'\s*```\s*', '', clean_response)
 
-        # Debugging: Print the cleaned response
-        print("Cleaned LLM Response:", clean_response)
-
         try:
             # Parse the response into a list of dictionaries
             test_cases = json.loads(clean_response)
-            
-            # Debugging: Print the parsed test cases
-            print("Parsed Test Cases:", test_cases)
             
             return test_cases
         except Exception as e:

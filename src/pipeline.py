@@ -48,7 +48,7 @@ class CodeGenerationPipeline:
             else:
                 # Serialize test cases to dictionaries before passing to refine_code
                 test_cases_dict = [test_case.dict() for test_case in test_cases]
-                current_code = self.generator.refine_code(model, language, current_code, execution_result.output, execution_result.error, test_cases_dict)
+                current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.error, test_cases_dict)
             
             # Clean the code
             current_code = self.clean_code(current_code, language=language)

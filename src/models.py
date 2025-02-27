@@ -26,6 +26,7 @@ class CodeIterationHistory(BaseModel):
     test_results: List[TestCaseResult] = Field(description="Results of test case validation")
 
 class PipelineResult(BaseModel):
+    cot: List[str] = Field(description="The chain of thought as a list of reasoning steps")
     final_code: str = Field(description="The final generated or refined code")
     final_result: CodeExecutionResult = Field(description="The final execution result")
     test_results: List[TestCaseResult] = Field(description="Results of test case validation")

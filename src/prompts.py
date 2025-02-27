@@ -30,14 +30,14 @@ SYSTEM_PROMPT = PromptTemplate(
         " \"Step 2: [Your second reasoning step]\",\n"
         " // ... additional steps as needed\n"
         " ],\n"
-        " \"code\": \"[Your complete {language} code, including a function definition and a print statement calling the function with generic variables (e.g., print(function_name(a, b)))]\"\n"
+        " \"code\": \"[Your complete {language} code as a single-line string with escaped newlines (e.g., \\\\n) including a function definition and a print statement calling the function with generic variables (e.g., print(function_name(a, b)))]\"\n"
         "}}\n\n"
         "8. Specific requirements:\n"
         " - The code must include a function that takes inputs dynamically.\n"
-        " - Add a print statement after the function, calling it with generic variables (e.g., print(function_name(a, b))), NOT hardcoded values, so Judge0 can inject test case inputs.\n"
-        " - Ensure the output matches the test case expectations exactly for Judge0 API validation.\n"
+        " - Add a print statement after the function, calling it with generic variables (e.g., print(function_name(a, b))), NOT hardcoded values.\n"
+        " - Ensure the `code` field is a single-line string with escaped newlines (\\\\n) for valid JSON.\n"
         " - Use only standard {language} libraries unless specified otherwise.\n"
-        " - Assume inputs will be provided by Judge0 in the format implied by the test cases (e.g., space-separated values, newlines).\n\n"
+        " - Assume inputs will be provided by Judge0 in the format implied by the test cases.\n\n"
         "Focus on correctness, clarity, and compatibility with Judge0’s dynamic input system."
     )
 )

@@ -1,7 +1,8 @@
+import httpx
 import re
 import logging
 from typing import List, Dict, Any
-from models import CodeIterationHistory, PipelineResult, TestCase, TestCaseResult
+from models import CodeIterationHistory, PipelineResult, TestCase, TestCaseResult, CodeExecutionResult
 from executor import execute_code
 from generator import CodeGenerator
 import json
@@ -15,6 +16,8 @@ class CodeGenerationPipeline:
 
     def clean_code(self, code: str, language: str) -> str:
         """Remove Markdown formatting from the generated code."""
+        clean_response = re.sub(r'```(json)?\s*', '', code)
+        code = re.sub(r'\s*```\s*', '', clean_response)
         escaped_language = re.escape(language)
         code = re.sub(rf'```{escaped_language}\s*', '', code)
         code = re.sub(r'\s*```\s*', '', code)
@@ -53,9 +56,18 @@ class CodeGenerationPipeline:
                 
                 # Clean the code
                 current_code = self.clean_code(current_code, language=language)
-                
+
+                try:
+                    code_dict = json.loads(current_code)
+                    code = code_dict.get("code")
+                    cot = code_dict.get("chain_of_thought")
+                except json.JSONDecodeError as e:
+                    print("JSON parsing error:", e)
+                except Exception as e:
+                    print("Unexpected error:", e)
+
                 # Execute the code with user input (if provided)
-                execution_result = await execute_code(current_code, language, user_input)
+                execution_result = await execute_code(code, language, user_input)
                 
                 # Validate test cases
                 test_case_results = []
@@ -108,7 +120,8 @@ class CodeGenerationPipeline:
                 break
         
         return PipelineResult(
-            final_code=current_code,
+            cot=cot,
+            final_code=code,
             final_result=execution_result,
             test_results=test_case_results,
             iterations=iteration + 1,

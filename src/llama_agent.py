@@ -130,6 +130,9 @@ if st.button("Run Pipeline"):
 
     # Display results
     st.header("Results")
+    st.subheader("Chain of Thought")
+    for i, step in enumerate(result.cot, 1):
+        st.write(f"{i}. {step}")
     st.subheader("Final Code")
     st.code(result.final_code, language=language_code)
 

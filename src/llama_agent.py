@@ -144,9 +144,12 @@ if st.button("Run Pipeline"):
         st.write(f"**Input:** {test_result.input}")  # Use dot notation
         st.write(f"**Expected Output:** {test_result.expected_output}")  # Use dot notation
         st.write(f"**Actual Output:** {test_result.actual_output}")  # Use dot notation
-        st.write(f"**Passed:** {test_result.passed}")  # Use dot notation
-        if test_result.error:  # Use dot notation
-            st.write(f"**Error:** {test_result.error}")
+        st.write(f"**Time:** {test_result.time}")  # Use dot notation
+        st.write(f"**Memory:** {test_result.memory}")  # Use dot notation
+        if test_result.stderror:  # Use dot notation
+            st.write(f"**Standard Error:** {test_result.stderror}")  # Use dot notation
+        if test_result.compiler_errors:
+            st.write(f"**Compiler Errors:** {test_case.compiler_errors}")
         st.write("---")
 
     st.subheader("Pipeline Metadata")
@@ -164,15 +167,21 @@ if st.button("Run Pipeline"):
         st.code(history.code, language=language_code)
         st.write("**Execution Result:**")
         st.text(history.execution_result.output)
-        if history.execution_result.error:
-            st.write(f"**Error:** {history.execution_result.error}")
+        if history.execution_result.stderror:
+            st.write(f"**Standard Error:** {history.execution_result.stderror}")
+        if history.execution_result.compiler_errors:
+            st.write(f"**Compiler Errors:** {history.execution_result.compiler_errors}")
         st.write("**Test Case Results:**")
         for i, test_result in enumerate(history.test_results):
             st.write(f"#### Test Case {i + 1}")
             st.write(f"**Input:** {test_result.input}")
             st.write(f"**Expected Output:** {test_result.expected_output}")
             st.write(f"**Actual Output:** {test_result.actual_output}")
+            st.write(f"**Time:** {test_result.time}")
+            st.write(f"**Memory:** {test_result.memory}")
             st.write(f"**Passed:** {test_result.passed}")
-            if test_result.error:
-                st.write(f"**Error:** {test_result.error}")
+            if test_result.stderror:
+                st.write(f"**Standard Error:** {test_result.stderror}")
+            if test_result.compiler_errors:
+                st.write(f"**Compiler Errors:** {test_result.compiler_errors}")
         st.write("---")

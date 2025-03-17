@@ -99,7 +99,10 @@ class CodeGenerationPipeline:
                         expected_output=test_case.expected_output,
                         actual_output=test_case_result.output,
                         passed=passed,
-                        error=test_case_result.error
+                        stderror=test_case_result.stderror,
+                        compiler_errors=test_case_result.compiler_errors,
+                        time=test_case_result.time,
+                        memory=test_case_result.memory
                     ))
                 
                 # Pass test case results to the LLM for validation
@@ -127,7 +130,7 @@ class CodeGenerationPipeline:
                     iteration=iteration + 1,
                     chain_of_thought=cot,
                     code=code,
-                    execution_result=CodeExecutionResult(output='', error=f"HTTP error: {e}"),
+                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}"),
                     test_results=[]
                 ))
                 break
@@ -137,7 +140,7 @@ class CodeGenerationPipeline:
                     iteration=iteration + 1,
                     chain_of_thought=cot,
                     code=code,
-                    execution_result=CodeExecutionResult(output='', error=f"Execution error: {e}"),
+                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}"),
                     test_results=[]
                 ))
                 break

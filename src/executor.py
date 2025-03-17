@@ -50,19 +50,26 @@ async def execute_code(code: str, language: str, input: str) -> CodeExecutionRes
             logger.info(f"Response data: {response_data}")
             
          
-            stderr = response_data['stderr'] if response_data['stderr'] is not None else ''
-            stdout = response_data['stdout'] if response_data['stdout'] is not None else ''
+            stderr = response_data.get('stderr', '') or ''
+            stdout = response_data.get('stdout', '') or ''
+            time = response_data.get('time', '0')
+            memory = response_data.get('memory', '0')
+            compiler_errors = response_data.get('compile_output', '') or ''
             
             return CodeExecutionResult(
                 output=stdout,
-                error=stderr
+                stderror=stderr,
+                time=time,
+                memory=memory,
+                compiler_errors=compiler_errors
             )
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error occurred: {e}")
-        return CodeExecutionResult(output='', error=f"HTTP error: {e}")  
+        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}")
+
     except Exception as e:
         logger.error(f"Execution error occurred: {e}")
-        return CodeExecutionResult(output='', error=f"Execution error: {e}")
+        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"Execution error: {e}")
 
 async def validate_test_cases(code: str, language: str, test_cases: List[TestCase]) -> List[Dict[str, Any]]:
     """Validate the code against all test cases"""

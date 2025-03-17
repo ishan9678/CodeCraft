@@ -8,10 +8,9 @@ import os
 
 load_dotenv()
 
-api_key = os.getenv('API_KEY')
+api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
-    raise ValueError("API_KEY is not set in the environment variables")
-
+    raise ValueError("GROQ API KEY is not set")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -153,3 +152,27 @@ if st.button("Run Pipeline"):
     st.subheader("Pipeline Metadata")
     st.write(f"**Total Iterations:** {result.iterations}")
     st.write(f"**Success:** {result.success}")
+
+    # Display iteration history
+    st.subheader("Iteration History")
+    for history in result.history:
+        st.write(f"### Iteration {history.iteration}")
+        st.write("**Chain of Thought:**")
+        for i, step in enumerate(history.chain_of_thought, 1):
+            st.write(f"{i}. {step}")
+        st.write("**Generated Code:**")
+        st.code(history.code, language=language_code)
+        st.write("**Execution Result:**")
+        st.text(history.execution_result.output)
+        if history.execution_result.error:
+            st.write(f"**Error:** {history.execution_result.error}")
+        st.write("**Test Case Results:**")
+        for i, test_result in enumerate(history.test_results):
+            st.write(f"#### Test Case {i + 1}")
+            st.write(f"**Input:** {test_result.input}")
+            st.write(f"**Expected Output:** {test_result.expected_output}")
+            st.write(f"**Actual Output:** {test_result.actual_output}")
+            st.write(f"**Passed:** {test_result.passed}")
+            if test_result.error:
+                st.write(f"**Error:** {test_result.error}")
+        st.write("---")

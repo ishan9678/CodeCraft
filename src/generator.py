@@ -60,18 +60,21 @@ class CodeGenerator:
             logger.error(f"Failed to parse LLM response: {e}")
             raise ValueError("Failed to parse LLM response as JSON.")
 
-    def generate_test_cases(self, model: str, language: str, question: str, explanation: str) -> List[Dict[str, Any]]:
+    def generate_test_cases(self, model: str, language: str, question: str, explanation: str, user_input: str) -> List[Dict[str, Any]]:
         """Generate test cases using the LLM."""
         prompt = TEST_CASE_GENERATION_PROMPT.format(
             language=language,
             question=question,
-            explanation=explanation
+            explanation=explanation,
+            example_input=user_input
         )
         response = self.generate_response(prompt, model)
         
         # Clean the response to remove unnecessary markdown or other noise
         clean_response = re.sub(r'```(json)?\s*', '', response)
         clean_response = re.sub(r'\s*```\s*', '', clean_response)
+
+        logger.info(f"Cleaned response: {clean_response}")
 
         try:
             # Parse the response into a list of dictionaries

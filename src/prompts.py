@@ -8,68 +8,118 @@ output_parser = PydanticOutputParser(pydantic_object=TestCaseValidationResult)
 SYSTEM_PROMPT = PromptTemplate(
     input_variables=["language", "question", "test_cases", "explanation"],
     template=(
-        "You are an expert {language} engineer tasked with solving a coding problem. Your solution will be submitted to the Judge0 API, which will provide inputs dynamically and compare the output against expected test case results. Follow these steps:\n\n"
-        "1. Analyze the problem carefully:\n{question}\n\n"
-        "2. Review the explanation for clarity:\n{explanation}\n\n"
-        "3. Study the sample test cases to understand input-output expectations:\n{test_cases}\n\n"
-        "4. Plan your approach:\n"
-        " - Break down the problem into clear, logical steps.\n"
-        " - Consider edge cases (e.g., empty inputs, large numbers, invalid data) and ensure robustness.\n"
-        " - Optimize for efficiency while maintaining readability.\n"
-        "5. Implement a solution in {language} that:\n"
-        " - Defines a function accepting dynamic inputs as parameters.\n"
-        " - Returns or prints the exact output expected by the test cases.\n"
-        " - Handles all test cases correctly when executed.\n"
-        "6. Validate your solution:\n"
-        " - Ensure the function’s output matches the test case outputs precisely (e.g., correct format, no extra spaces).\n"
-        " - Test mentally or simulate with the provided test cases.\n"
-        "7. Format the response as a valid JSON object with no text outside this structure:\n"
-        "{{\n"
-        " \"chain_of_thought\": [\n"
-        " \"Step 1: [Your first reasoning step]\",\n"
-        " \"Step 2: [Your second reasoning step]\",\n"
-        " // ... additional steps as needed\n"
-        " ],\n"
-        " \"code\": \"[Your complete {language} code as a single-line string with escaped newlines (e.g., \\\\n) including a function definition and a print statement calling the function with generic variables (e.g., print(function_name(a, b)))]\"\n"
-        "}}\n\n"
-        "8. Specific requirements:\n"
-        " - The code must include a function that takes inputs dynamically.\n"
-        " - Add a print statement after the function, calling it with generic variables (e.g., print(function_name(a, b))), NOT hardcoded values.\n"
-        " - Ensure the `code` field is a single-line string with escaped newlines (\\\\n) for valid JSON.\n"
-        " - Use only standard {language} libraries unless specified otherwise.\n"
-        " - Assume inputs will be provided by Judge0 in the format implied by the test cases.\n\n"
-        "Focus on correctness, clarity, and compatibility with Judge0’s dynamic input system."
+        "You are an expert {language} engineer tasked with solving a coding problem. "
+        "Your solution will be submitted to the Judge0 API, which will provide inputs dynamically through standard input (stdin) "
+        "and compare the output against expected test case results. Follow these steps carefully:\n\n"
+
+        "1. **Analyze the problem carefully:**\n{question}\n\n"
+
+        "2. **Review the explanation for clarity:**\n{explanation}\n\n"
+
+        "3. **Study the sample test cases to understand input-output expectations:**\n{test_cases}\n\n"
+
+        "4. **Plan your approach:**\n"
+        "   - Break down the problem into clear, logical steps.\n"
+        "   - Consider edge cases (e.g., empty inputs, large numbers, invalid data) and ensure robustness.\n"
+        "   - Optimize for efficiency while maintaining readability.\n\n"
+
+        "5. **Implement a solution in {language} that:**\n"
+        "   - MUST read input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - Processes the input correctly, converting data types as needed.\n"
+        "   - MUST print the exact output to standard output (stdout) as expected by the test cases.\n\n"
+
+        "6. **Validate your solution:**\n"
+        "   - Ensure the output matches the expected test case outputs exactly (correct format, no extra spaces).\n"
+        "   - Test mentally or simulate with the provided test cases.\n\n"
+
+        "7. **Format your response in the following YAML-style format with clear section markers:**\n"
+            "```\n"
+            "CHAIN_OF_THOUGHT:\n"
+            "- Step 1: [Your first reasoning step]\n"
+            "- Step 2: [Your second reasoning step]\n"
+            "# Add as many steps as needed\n"
+            "\n"
+            "CODE:\n"
+            "[Your full solution code with appropriate stdin handling for {language}]\n"
+            "```\n\n"
+
+        "8. **Strict requirements for Judge0 compatibility:**\n"
+        "   - The code MUST read ALL input from standard input (stdin) using the appropriate method for {language}.\n"
+        "     * Python: Use `sys.stdin.read()` or `input()`\n"
+        "     * Java: Use `Scanner` with `System.in`\n"
+        "     * C++: Use `cin`, `getline()`, or other stdin methods\n"
+        "     * JavaScript: Use `process.stdin` methods\n"
+        "     * Other languages: Use their standard input reading mechanism\n"
+        "   - The code MUST write ALL output to standard output (stdout) using appropriate printing methods.\n"
+        "   - Do NOT expect interactive user prompts; Judge0 provides all input at once via stdin.\n"
+        "   - The solution must NOT contain hardcoded test values; it must process input dynamically.\n"
+        "   - Use only standard libraries for {language} unless specified otherwise.\n\n"
+
+        "Focus on correctness, exact output formatting, and compatibility with Judge0's stdin/stdout system."
     )
 )
 
 REFINE_PROMPT = PromptTemplate(
     input_variables=["language", "question", "code", "results", "error", "test_cases"],
     template=(
-        "You are a highly skilled software engineer. Your task is to refine and debug the given {language} code to "
-        "fix errors, improve functionality, and ensure correctness.\n\n"
-        
-        "### Problem:\n{question}\n\n"
+        "You are an expert {language} engineer tasked with debugging and refining code that failed to pass all test cases. "
+        "Your solution will be submitted to the Judge0 API, which will provide inputs dynamically through standard input (stdin) "
+        "and compare the output against expected test case results. Follow these steps carefully:\n\n"
 
-        "### Original Code:\n{code}\n\n"
-        
-        "### Execution Results:\n{results}\n\n"
-        
-        "### Error Messages:\n{error}\n\n"
-        
-        "### Test Cases to Pass:\n{test_cases}\n\n"
-        
-        "### Refinement Instructions:\n"
-        "1. **Analyze** the given errors, execution results, and expected test cases.\n"
-        "2. **Think through the solution**: Break down the problem and outline the steps to fix the errors.\n"
-        "3. **Fix all syntax and logical errors**, ensuring the code executes without crashing.\n"
-        "4. **Pay attention to output formatting**: Ensure the output matches the expected format exactly, including casing\n"
-        "5. **Improve efficiency**, readability, and robustness by handling edge cases.\n"
-        "6. **Iteratively refine the logic** so that all test cases pass successfully.\n"
-        "7. **Do not modify the input/output format**—the code must produce output exactly as expected.\n"
-        "8. **Return only the corrected code** without additional explanations or comments.\n"
-        "9. **Ensure correctness on every iteration**— fix all the testcases that failed.\n\n"
-        
-        "Your output should contain only the improved code, nothing else."
+        "1. **Analyze the original problem:**\n{question}\n\n"
+
+        "2. **Review the original code that needs fixing:**\n{code}\n\n"
+
+        "3. **Study the execution results and error messages:**\n"
+        "   Execution Results:\n{results}\n\n"
+        "   Error Messages:\n{error}\n\n"
+
+        "4. **Review the test cases that need to pass:**\n{test_cases}\n\n"
+
+        "5. **Debug and refine the approach:**\n"
+        "   - Identify the root causes of failures or errors.\n"
+        "   - Pay special attention to input/output errors that occur when reading from stdin.\n"
+        "   - Implement robust error handling for all input operations.\n"
+        "   - Ensure the solution correctly handles all edge cases, including:\n"
+        "     * Empty inputs\n"
+        "     * Whitespace-only inputs\n"
+        "     * Unexpected input formats\n"
+        "     * End-of-file conditions\n"
+        "   - Fix all syntax errors, logical errors, and edge case handling.\n"
+        "   - Maintain or improve code efficiency and readability.\n\n"
+
+        "6. **Implement the corrected solution in {language} that:**\n"
+        "   - MUST read input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - MUST include proper error handling for all input operations.\n"
+        "   - Processes the input correctly, converting data types as needed.\n"
+        "   - MUST print the exact output to standard output (stdout) as expected by the test cases.\n\n"
+
+        "7. **Validate your solution:**\n"
+        "   - Ensure the output matches the expected test case outputs exactly (correct format, no extra spaces).\n"
+        "   - Verify that all edge cases are handled correctly.\n"
+        "   - Test mentally or simulate with the provided test cases.\n\n"
+
+        "8. **Format your response in the following YAML-style format with clear section markers:**\n"
+            "```\n"
+            "CHAIN_OF_THOUGHT:\n"
+            "- Step 1: [Your first reasoning step]\n"
+            "- Step 2: [Your second reasoning step]\n"
+            "# Add as many steps as needed\n"
+            "\n"
+            "CODE:\n"
+            "[Your fully corrected solution code]\n"
+            "```\n\n"
+
+        "9. **Strict requirements for Judge0 compatibility:**\n"
+        "   - The code MUST read ALL input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - The code MUST implement proper error handling for all input operations.\n"
+        "   - The code MUST write ALL output to standard output (stdout) using appropriate printing methods.\n"
+        "   - Do NOT expect interactive user prompts; Judge0 provides all input at once via stdin.\n"
+        "   - The solution must NOT contain hardcoded test values; it must process input dynamically.\n"
+        "   - The `code` field in JSON must be a **single-line string** with escaped newlines for proper formatting.\n"
+        "   - Use only standard libraries for {language} unless specified otherwise.\n\n"
+
+        "Focus on fixing the specific issues while maintaining compatibility with Judge0's stdin/stdout system."
     )
 )
 

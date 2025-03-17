@@ -133,23 +133,35 @@ VALIDATE_TEST_CASES_PROMPT = PromptTemplate(
         "1. Compare the actual output with the expected output for each test case.\n"
         "2. Return the validation results in the following JSON format:\n"
         "3. Do not provide code, your job is just to compare the outputs.\n"
-        "4. Just return the validation results without any additional explanations or text.\n"
+        "4. If output difference is just in casing or whitespace mark it as passed.\n"
+        "5. Just return the validation results without any additional explanations or text.\n"
         "{format_instructions}\n"
     ),
     partial_variables={"format_instructions": output_parser.get_format_instructions()}
 )
 
 TEST_CASE_GENERATION_PROMPT = PromptTemplate(
-    input_variables=["question", "explanation"],
+    input_variables=["question", "explanation", "example_input"],
     template=(
-    "You are an expert software engineer. Generate a set of test cases for the following problem:\n\n"
-    "### Problem:\n{question}\n\n"
-    "### Explanation:\n{explanation}\n\n"
-    "### Instructions:\n"
-    "1. Generate at least 5 test cases that cover various scenarios, including edge cases.\n"
-    "2. For each test case, provide the input and the expected output.\n"
-    "3. Return the test cases in JSON format as a list of objects with 'input' and 'expected_output' fields.\n"
-    "4. input and expected_output should be strings.\n"
-    "5. Do not include any additional explanations or text.\n"
+        "You are an expert software engineer. Generate test cases for this problem:\n\n"
+        "### Problem:\n{question}\n\n"
+        "### Explanation:\n{explanation}\n\n"
+        "### Example Test Case Format:\n{example_input}\n\n"
+        "### Instructions:\n"
+        "1. Generate 5 test cases covering normal, edge, and corner cases\n"
+        "2. Maintain EXACTLY the same input/output format and data types as the example\n"
+        "3. For array inputs, match the exact string representation (commas, brackets, quotes)\n"
+        "4. Return JSON list of objects with 'input' and 'expected_output' string fields\n"
+        "5. No additional text or explanations - only valid JSON\n"
+        "\nEnsure:\n"
+        "- Input formatting matches the example's structure and syntax precisely\n"
+        "- Output values are computed correctly for given inputs\n"
+        "- All string values use same quoting style as example\n"
+        "- Numerical precision matches example's decimal places\n"
+        "6. Output MUST be ONLY the JSON array with no surrounding text\n"
+        "7. Ensure valid JSON syntax - proper commas, quotes, and brackets\n"
+        "8. Never include test case explanations or commentary\n"
+        "9. Response must start with '[' and end with ']'\n"
+        "10. Format exactly like this example:\n{example_input}"
     ),
 )

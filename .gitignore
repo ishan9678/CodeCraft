@@ -1,2 +1,6 @@
 llm-feedback-loop/
 .env
+src/migrations/__pycache__/
+src/migrations/alembic.ini
+src/migrations/versions/__pycache__
+src/__pycache__

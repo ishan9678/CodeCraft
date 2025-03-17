@@ -8,50 +8,118 @@ output_parser = PydanticOutputParser(pydantic_object=TestCaseValidationResult)
 SYSTEM_PROMPT = PromptTemplate(
     input_variables=["language", "question", "test_cases", "explanation"],
     template=(
-        "You are an expert software engineer. Before writing the code, break down the problem into smaller steps and think through the solution.\n\n"
-        "### Problem:\n{question}\n\n"
-        "### Test Cases:\n{test_cases}\n\n"
-        "### Explanation:\n{explanation}\n\n"
-        "### Instructions:\n"
-        "1. **Think through the problem**: Break down the problem into smaller steps and outline the solution.\n"
-        "2. **Write clean, efficient, and correct {language} code** that handles all edge cases.\n"
-        "3. Include comments and docstrings for clarity.\n"
-        "4. Print only the code without any additional explanations or text.\n"
-        "5. Do not include any test cases or example usage in the code.\n"
-        "6. Ensure the code prints the output from the input passed, as it will be sent to a compiler for validation.\n"
+        "You are an expert {language} engineer tasked with solving a coding problem. "
+        "Your solution will be submitted to the Judge0 API, which will provide inputs dynamically through standard input (stdin) "
+        "and compare the output against expected test case results. Follow these steps carefully:\n\n"
+
+        "1. **Analyze the problem carefully:**\n{question}\n\n"
+
+        "2. **Review the explanation for clarity:**\n{explanation}\n\n"
+
+        "3. **Study the sample test cases to understand input-output expectations:**\n{test_cases}\n\n"
+
+        "4. **Plan your approach:**\n"
+        "   - Break down the problem into clear, logical steps.\n"
+        "   - Consider edge cases (e.g., empty inputs, large numbers, invalid data) and ensure robustness.\n"
+        "   - Optimize for efficiency while maintaining readability.\n\n"
+
+        "5. **Implement a solution in {language} that:**\n"
+        "   - MUST read input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - Processes the input correctly, converting data types as needed.\n"
+        "   - MUST print the exact output to standard output (stdout) as expected by the test cases.\n\n"
+
+        "6. **Validate your solution:**\n"
+        "   - Ensure the output matches the expected test case outputs exactly (correct format, no extra spaces).\n"
+        "   - Test mentally or simulate with the provided test cases.\n\n"
+
+        "7. **Format your response in the following YAML-style format with clear section markers:**\n"
+            "```\n"
+            "CHAIN_OF_THOUGHT:\n"
+            "- Step 1: [Your first reasoning step]\n"
+            "- Step 2: [Your second reasoning step]\n"
+            "# Add as many steps as needed\n"
+            "\n"
+            "CODE:\n"
+            "[Your full solution code with appropriate stdin handling for {language}]\n"
+            "```\n\n"
+
+        "8. **Strict requirements for Judge0 compatibility:**\n"
+        "   - The code MUST read ALL input from standard input (stdin) using the appropriate method for {language}.\n"
+        "     * Python: Use `sys.stdin.read()` or `input()`\n"
+        "     * Java: Use `Scanner` with `System.in`\n"
+        "     * C++: Use `cin`, `getline()`, or other stdin methods\n"
+        "     * JavaScript: Use `process.stdin` methods\n"
+        "     * Other languages: Use their standard input reading mechanism\n"
+        "   - The code MUST write ALL output to standard output (stdout) using appropriate printing methods.\n"
+        "   - Do NOT expect interactive user prompts; Judge0 provides all input at once via stdin.\n"
+        "   - The solution must NOT contain hardcoded test values; it must process input dynamically.\n"
+        "   - Use only standard libraries for {language} unless specified otherwise.\n\n"
+
+        "Focus on correctness, exact output formatting, and compatibility with Judge0's stdin/stdout system."
     )
 )
 
-# Refinement prompt for fixing errors
-# In the prompts.py file, update the REFINE_PROMPT
 REFINE_PROMPT = PromptTemplate(
-    input_variables=["language", "question" , "code", "results", "error", "test_cases"],
+    input_variables=["language", "question", "code", "results", "error", "test_cases"],
     template=(
-        "You are a highly skilled software engineer. Your task is to refine and debug the given {language} code to "
-        "fix errors, improve functionality, and ensure correctness.\n\n"
-        
-        "### Problem:\n{question}\n\n"
+        "You are an expert {language} engineer tasked with debugging and refining code that failed to pass all test cases. "
+        "Your solution will be submitted to the Judge0 API, which will provide inputs dynamically through standard input (stdin) "
+        "and compare the output against expected test case results. Follow these steps carefully:\n\n"
 
-        "### Original Code:\n{code}\n\n"
-        
-        "### Execution Results:\n{results}\n\n"
-        
-        "### Error Messages:\n{error}\n\n"
-        
-        "### Test Cases to Pass:\n{test_cases}\n\n"
-        
-        "### Refinement Instructions:\n"
-        "1. **Analyze** the given errors, execution results, and expected test cases.\n"
-        "2. **Think through the solution**: Break down the problem and outline the steps to fix the errors.\n"
-        "3. **Fix all syntax and logical errors**, ensuring the code executes without crashing.\n"
-        "4. **Pay attention to output formatting**: Ensure the output matches the expected format exactly, including casing\n"
-        "5. **Improve efficiency**, readability, and robustness by handling edge cases.\n"
-        "6. **Iteratively refine the logic** so that all test cases pass successfully.\n"
-        "7. **Do not modify the input/output format**—the code must produce output exactly as expected.\n"
-        "8. **Return only the corrected code** without additional explanations or comments.\n"
-        "9. **Ensure correctness on every iteration**— fix all the testcases that failed.\n\n"
-        
-        "Your output should contain only the improved code, nothing else."
+        "1. **Analyze the original problem:**\n{question}\n\n"
+
+        "2. **Review the original code that needs fixing:**\n{code}\n\n"
+
+        "3. **Study the execution results and error messages:**\n"
+        "   Execution Results:\n{results}\n\n"
+        "   Error Messages:\n{error}\n\n"
+
+        "4. **Review the test cases that need to pass:**\n{test_cases}\n\n"
+
+        "5. **Debug and refine the approach:**\n"
+        "   - Identify the root causes of failures or errors.\n"
+        "   - Pay special attention to input/output errors that occur when reading from stdin.\n"
+        "   - Implement robust error handling for all input operations.\n"
+        "   - Ensure the solution correctly handles all edge cases, including:\n"
+        "     * Empty inputs\n"
+        "     * Whitespace-only inputs\n"
+        "     * Unexpected input formats\n"
+        "     * End-of-file conditions\n"
+        "   - Fix all syntax errors, logical errors, and edge case handling.\n"
+        "   - Maintain or improve code efficiency and readability.\n\n"
+
+        "6. **Implement the corrected solution in {language} that:**\n"
+        "   - MUST read input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - MUST include proper error handling for all input operations.\n"
+        "   - Processes the input correctly, converting data types as needed.\n"
+        "   - MUST print the exact output to standard output (stdout) as expected by the test cases.\n\n"
+
+        "7. **Validate your solution:**\n"
+        "   - Ensure the output matches the expected test case outputs exactly (correct format, no extra spaces).\n"
+        "   - Verify that all edge cases are handled correctly.\n"
+        "   - Test mentally or simulate with the provided test cases.\n\n"
+
+        "8. **Format your response in the following YAML-style format with clear section markers:**\n"
+            "```\n"
+            "CHAIN_OF_THOUGHT:\n"
+            "- Step 1: [Your first reasoning step]\n"
+            "- Step 2: [Your second reasoning step]\n"
+            "# Add as many steps as needed\n"
+            "\n"
+            "CODE:\n"
+            "[Your fully corrected solution code]\n"
+            "```\n\n"
+
+        "9. **Strict requirements for Judge0 compatibility:**\n"
+        "   - The code MUST read ALL input from standard input (stdin) using the appropriate method for {language}.\n"
+        "   - The code MUST implement proper error handling for all input operations.\n"
+        "   - The code MUST write ALL output to standard output (stdout) using appropriate printing methods.\n"
+        "   - Do NOT expect interactive user prompts; Judge0 provides all input at once via stdin.\n"
+        "   - The solution must NOT contain hardcoded test values; it must process input dynamically.\n"
+        "   - The `code` field in JSON must be a **single-line string** with escaped newlines for proper formatting.\n"
+        "   - Use only standard libraries for {language} unless specified otherwise.\n\n"
+
+        "Focus on fixing the specific issues while maintaining compatibility with Judge0's stdin/stdout system."
     )
 )
 
@@ -65,23 +133,35 @@ VALIDATE_TEST_CASES_PROMPT = PromptTemplate(
         "1. Compare the actual output with the expected output for each test case.\n"
         "2. Return the validation results in the following JSON format:\n"
         "3. Do not provide code, your job is just to compare the outputs.\n"
-        "4. Just return the validation results without any additional explanations or text.\n"
+        "4. If output difference is just in casing or whitespace mark it as passed.\n"
+        "5. Just return the validation results without any additional explanations or text.\n"
         "{format_instructions}\n"
     ),
     partial_variables={"format_instructions": output_parser.get_format_instructions()}
 )
 
 TEST_CASE_GENERATION_PROMPT = PromptTemplate(
-    input_variables=["question", "explanation"],
+    input_variables=["question", "explanation", "example_input"],
     template=(
-    "You are an expert software engineer. Generate a set of test cases for the following problem:\n\n"
-    "### Problem:\n{question}\n\n"
-    "### Explanation:\n{explanation}\n\n"
-    "### Instructions:\n"
-    "1. Generate at least 5 test cases that cover various scenarios, including edge cases.\n"
-    "2. For each test case, provide the input and the expected output.\n"
-    "3. Return the test cases in JSON format as a list of objects with 'input' and 'expected_output' fields.\n"
-    "4. input and expected_output should be strings.\n"
-    "5. Do not include any additional explanations or text.\n"
+        "You are an expert software engineer. Generate test cases for this problem:\n\n"
+        "### Problem:\n{question}\n\n"
+        "### Explanation:\n{explanation}\n\n"
+        "### Example Test Case Format:\n{example_input}\n\n"
+        "### Instructions:\n"
+        "1. Generate 5 test cases covering normal, edge, and corner cases\n"
+        "2. Maintain EXACTLY the same input/output format and data types as the example\n"
+        "3. For array inputs, match the exact string representation (commas, brackets, quotes)\n"
+        "4. Return JSON list of objects with 'input' and 'expected_output' string fields\n"
+        "5. No additional text or explanations - only valid JSON\n"
+        "\nEnsure:\n"
+        "- Input formatting matches the example's structure and syntax precisely\n"
+        "- Output values are computed correctly for given inputs\n"
+        "- All string values use same quoting style as example\n"
+        "- Numerical precision matches example's decimal places\n"
+        "6. Output MUST be ONLY the JSON array with no surrounding text\n"
+        "7. Ensure valid JSON syntax - proper commas, quotes, and brackets\n"
+        "8. Never include test case explanations or commentary\n"
+        "9. Response must start with '[' and end with ']'\n"
+        "10. Format exactly like this example:\n{example_input}"
     ),
 )

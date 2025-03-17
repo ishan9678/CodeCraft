@@ -5,8 +5,11 @@ class TestCaseResult(BaseModel):
     input: str = Field(description="Input for the test case")
     expected_output: Optional[str] = Field(description="Expected output for the test case")
     actual_output: Optional[str] = Field(description="Actual output from the code execution")
+    stderror: Optional[str] = Field(description="The error message if a runtime error occurred during execution")
+    compiler_errors: Optional[str] = Field(description="The compiler errors if any occurred during compilation")
+    time: str = Field(description="The time taken for code execution")
+    memory: int = Field(description="The memory used during code execution")
     passed: bool = Field(description="Whether the test case passed")
-    error: Optional[str] = Field(description="The error message if an error occurred during execution")
 
 class TestCaseValidationResult(BaseModel):
     test_results: List[TestCaseResult] = Field(description="List of test case validation results")
@@ -17,7 +20,10 @@ class TestCase(BaseModel):
 
 class CodeExecutionResult(BaseModel):
     output: str = Field(description="The output of the code execution")
-    error: str = Field(description="The error message if an error occurred during execution")
+    time: str = Field(description="The time taken for code execution")
+    memory: int = Field(description="The memory used during code execution")
+    stderror: str = Field(description="The error message if a runtime error occurred during execution")
+    compiler_errors: str = Field(description="The compiler errors if any occurred during compilation")
 
 class CodeIterationHistory(BaseModel):
     iteration: int = Field(description="The iteration number")

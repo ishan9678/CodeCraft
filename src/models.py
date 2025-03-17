@@ -21,6 +21,7 @@ class CodeExecutionResult(BaseModel):
 
 class CodeIterationHistory(BaseModel):
     iteration: int = Field(description="The iteration number")
+    chain_of_thought:  List[str] = Field(description="The chain of thought for this iteration")
     code: str = Field(description="The generated or refined code")
     execution_result: CodeExecutionResult = Field(description="The result of the code execution")
     test_results: List[TestCaseResult] = Field(description="Results of test case validation")

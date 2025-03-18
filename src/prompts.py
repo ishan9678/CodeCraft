@@ -60,7 +60,7 @@ SYSTEM_PROMPT = PromptTemplate(
 )
 
 REFINE_PROMPT = PromptTemplate(
-    input_variables=["language", "question", "code", "results", "error", "test_cases"],
+    input_variables=["language", "question", "code", "results", "stderror", "compiler_errors", "test_cases"],
     template=(
         "You are an expert {language} engineer tasked with debugging and refining code that failed to pass all test cases. "
         "Your solution will be submitted to the Judge0 API, which will provide inputs dynamically through standard input (stdin) "
@@ -72,7 +72,7 @@ REFINE_PROMPT = PromptTemplate(
 
         "3. **Study the execution results and error messages:**\n"
         "   Execution Results:\n{results}\n\n"
-        "   Error Messages:\n{error}\n\n"
+        "   Error Messages:\n stderror: {stderror}, compiler erros: {compiler_errors}\n\n"
 
         "4. **Review the test cases that need to pass:**\n{test_cases}\n\n"
 

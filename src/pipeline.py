@@ -74,7 +74,7 @@ class CodeGenerationPipeline:
                 else:
                     # Serialize test cases to dictionaries before passing to refine_code
                     test_cases_dict = [test_case.dict() for test_case in test_cases]
-                    current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.error, test_cases_dict)
+                    current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.stderror, execution_result.compiler_errors, test_cases_dict)
 
                 try:
                     cot, code = self.parse_llm_response(current_code)
@@ -114,7 +114,7 @@ class CodeGenerationPipeline:
                     chain_of_thought=cot,
                     code=code,
                     execution_result=execution_result,
-                    test_results=test_case_results
+                    test_results=test_case_results   
                 ))
                 
                 # Check if all test cases passed
@@ -130,7 +130,7 @@ class CodeGenerationPipeline:
                     iteration=iteration + 1,
                     chain_of_thought=cot,
                     code=code,
-                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}"),
+                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors=''),
                     test_results=[]
                 ))
                 break
@@ -140,7 +140,7 @@ class CodeGenerationPipeline:
                     iteration=iteration + 1,
                     chain_of_thought=cot,
                     code=code,
-                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}"),
+                    execution_result=CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors=''),
                     test_results=[]
                 ))
                 break

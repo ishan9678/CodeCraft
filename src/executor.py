@@ -65,11 +65,11 @@ async def execute_code(code: str, language: str, input: str) -> CodeExecutionRes
             )
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error occurred: {e}")
-        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"HTTP error: {e}")
+        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='')
 
     except Exception as e:
         logger.error(f"Execution error occurred: {e}")
-        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='', error=f"Execution error: {e}")
+        return CodeExecutionResult(output='', stderror='', time='0', memory='0', compiler_errors='')
 
 async def validate_test_cases(code: str, language: str, test_cases: List[TestCase]) -> List[Dict[str, Any]]:
     """Validate the code against all test cases"""
@@ -81,6 +81,9 @@ async def validate_test_cases(code: str, language: str, test_cases: List[TestCas
             "expected_output": test_case.expected_output,
             "actual_output": execution_result.output,
             "passed": execution_result.output.strip() == test_case.expected_output.strip(),
-            "error": execution_result.error
+            "stderror": execution_result.stderror,
+            "compiler_errors": execution_result.compiler_errors,
+            "time": execution_result.time,
+            "memory": execution_result.memory
         })
     return test_results

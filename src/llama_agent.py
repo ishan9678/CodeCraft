@@ -186,6 +186,15 @@ if st.button("Run Pipeline"):
 
     # Display a spinner while the pipeline is running
     with st.spinner("Running pipeline..."):
+        # Save the question to the database
+        question = save_question(
+            model=selected_model,
+            question_text=question,
+            explanation=explanation,
+            user_input=user_input,
+            language=language_code,
+            max_iterations=max_iterations
+        )
         result = asyncio.run(run_pipeline_async())
 
     # Display results
@@ -220,6 +229,14 @@ if st.button("Run Pipeline"):
     # Display iteration history
     st.subheader("Iteration History")
     for history in result.history:
+        # Save the iteration to the database
+        iteration = save_iteration(
+            question_id=question.id,
+            iteration_number=history.iteration,
+            chain_of_thought=" ".join(history.chain_of_thought),
+            generated_code=history.code,
+            success=all(test_case.passed for test_case in history.test_results)
+        )
         st.write(f"### Iteration {history.iteration}")
         st.write("**Chain of Thought:**")
         for i, step in enumerate(history.chain_of_thought, 1):
@@ -234,6 +251,17 @@ if st.button("Run Pipeline"):
             st.write(f"**Compiler Errors:** {history.execution_result.compiler_errors}")
         st.write("**Test Case Results:**")
         for i, test_result in enumerate(history.test_results):
+            save_test_case_results(
+                iteration_id=iteration.id,
+                input_data=test_result.input,
+                expected_output=test_result.expected_output,
+                actual_output=test_result.actual_output,
+                execution_time=test_result.time,
+                memory_usage=test_result.memory,
+                stderror=test_result.stderror or "",
+                compiler_errors=test_result.compiler_errors or "",
+                passed=test_result.passed
+            )
             st.write(f"#### Test Case {i + 1}")
             st.write(f"**Input:** {test_result.input}")
             st.write(f"**Expected Output:** {test_result.expected_output}")

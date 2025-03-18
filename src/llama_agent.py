@@ -5,6 +5,9 @@ from models import TestCase
 from pipeline import CodeGenerationPipeline
 from dotenv import load_dotenv
 import os
+from sqlalchemy.orm import Session
+from db_models import Base, engine, SessionLocal, Question, Iteration, TestCaseResult
+import uuid
 
 load_dotenv()
 
@@ -39,6 +42,64 @@ model_ids = [
     "mixtral-8x7b-32768",
     "gemma2-9b-it"
 ]
+
+# db helper functions
+def save_question(model, question_text, explanation, user_input, language, max_iterations):
+    session = SessionLocal()
+    try:
+        question = Question(
+            id=uuid.uuid4(),
+            model=model,
+            question=question_text,
+            explanation=explanation,
+            user_input=user_input,
+            language=language,
+            max_iterations=max_iterations
+        )
+        session.add(question)
+        session.commit()
+        session.refresh(question)  # Get the generated UUID
+        return question
+    finally:
+        session.close()
+
+def save_iteration(question_id, iteration_number, chain_of_thought, generated_code, success):
+    session = SessionLocal()
+    try:
+        iteration = Iteration(
+            id=uuid.uuid4(),
+            question_id=question_id,
+            iteration_number=iteration_number,
+            chain_of_thought=chain_of_thought,
+            generated_code=generated_code,
+            success=success
+        )
+        session.add(iteration)
+        session.commit()
+        session.refresh(iteration)
+        return iteration
+    finally:
+        session.close()
+
+def save_test_case_results(iteration_id, input_data, expected_output, actual_output, execution_time, memory_usage, stderror, compiler_errors, passed):
+    session = SessionLocal()
+    try:
+        test_case_result = TestCaseResult(
+            id=uuid.uuid4(),
+            iteration_id=iteration_id,
+            input=input_data,
+            expected_output=expected_output,
+            actual_output=actual_output,
+            execution_time=execution_time,
+            memory_usage=memory_usage,
+            stderror=stderror,
+            compiler_errors=compiler_errors,
+            passed=passed
+        )
+        session.add(test_case_result)
+        session.commit()
+    finally:
+        session.close()
 
 st.title("CodeCraft")
 
@@ -125,6 +186,15 @@ if st.button("Run Pipeline"):
 
     # Display a spinner while the pipeline is running
     with st.spinner("Running pipeline..."):
+        # Save the question to the database
+        question = save_question(
+            model=selected_model,
+            question_text=question,
+            explanation=explanation,
+            user_input=user_input,
+            language=language_code,
+            max_iterations=max_iterations
+        )
         result = asyncio.run(run_pipeline_async())
 
     # Display results
@@ -159,6 +229,14 @@ if st.button("Run Pipeline"):
     # Display iteration history
     st.subheader("Iteration History")
     for history in result.history:
+        # Save the iteration to the database
+        iteration = save_iteration(
+            question_id=question.id,
+            iteration_number=history.iteration,
+            chain_of_thought=" ".join(history.chain_of_thought),
+            generated_code=history.code,
+            success=all(test_case.passed for test_case in history.test_results)
+        )
         st.write(f"### Iteration {history.iteration}")
         st.write("**Chain of Thought:**")
         for i, step in enumerate(history.chain_of_thought, 1):
@@ -173,6 +251,17 @@ if st.button("Run Pipeline"):
             st.write(f"**Compiler Errors:** {history.execution_result.compiler_errors}")
         st.write("**Test Case Results:**")
         for i, test_result in enumerate(history.test_results):
+            save_test_case_results(
+                iteration_id=iteration.id,
+                input_data=test_result.input,
+                expected_output=test_result.expected_output,
+                actual_output=test_result.actual_output,
+                execution_time=test_result.time,
+                memory_usage=test_result.memory,
+                stderror=test_result.stderror or "",
+                compiler_errors=test_result.compiler_errors or "",
+                passed=test_result.passed
+            )
             st.write(f"#### Test Case {i + 1}")
             st.write(f"**Input:** {test_result.input}")
             st.write(f"**Expected Output:** {test_result.expected_output}")

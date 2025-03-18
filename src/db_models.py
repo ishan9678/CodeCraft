@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, Float, Text
+from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, Float, Text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 import uuid
@@ -41,7 +41,7 @@ class Iteration(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     question_id = Column(UUID(as_uuid=True), ForeignKey("questions.id", ondelete="CASCADE"))
     iteration_number = Column(Integer)
-    chain_of_thought = Column(Text)
+    chain_of_thought = Column(ARRAY(Text))
     generated_code = Column(Text)
     success = Column(Boolean)
 

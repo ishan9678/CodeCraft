@@ -173,7 +173,7 @@ if st.button("Run Pipeline"):
         iteration = save_iteration(
             question_id=question.id,
             iteration_number=history.iteration,
-            chain_of_thought=" ".join(history.chain_of_thought),
+            chain_of_thought=history.chain_of_thought,
             generated_code=history.code,
             success=all(test_case.passed for test_case in history.test_results)
         )

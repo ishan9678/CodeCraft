@@ -3,7 +3,7 @@ from openai import OpenAI
 from typing import List, Dict, Any
 from prompts import SYSTEM_PROMPT, REFINE_PROMPT, TEST_CASE_GENERATION_PROMPT, VALIDATE_TEST_CASES_PROMPT
 from langchain.output_parsers import PydanticOutputParser
-from models import TestCaseValidationResult
+from models import TestCaseValidationResult, TestCaseResult
 import logging
 import re
 
@@ -44,6 +44,21 @@ class CodeGenerator:
             compiler_errors=compiler_errors,
             test_cases=json.dumps(test_cases)
         )
+        print('refine prompt', prompt)
+        return self.generate_response(prompt, model)
+    
+    def refine_code(self, model: str, language: str, question: str, code: str, test_cases: List[Dict[str, Any]], test_case_results: List[TestCaseResult]) -> str:
+        # Convert test_case_results to a JSON string for the prompt
+        test_case_results_json = json.dumps([result.dict() for result in test_case_results])
+
+        prompt = REFINE_PROMPT.format(
+            language=language,
+            question=question,
+            code=code,
+            test_cases=json.dumps(test_cases),
+            test_case_results=test_case_results_json
+        )
+        print('refine prompt', prompt)
         return self.generate_response(prompt, model)
 
     def validate_test_cases(self, model:str, test_cases: str) -> TestCaseValidationResult:

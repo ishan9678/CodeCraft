@@ -13,15 +13,6 @@ class CodeGenerationPipeline:
     def __init__(self, api_key: str, base_url: str, max_iterations: int = 3):
         self.generator = CodeGenerator(api_key=api_key, base_url=base_url)
         self.max_iterations = max_iterations
-
-    def clean_code(self, code: str, language: str) -> str:
-        """Remove Markdown formatting from the generated code."""
-        clean_response = re.sub(r'```(json)?\s*', '', code)
-        code = re.sub(r'\s*```\s*', '', clean_response)
-        escaped_language = re.escape(language)
-        code = re.sub(rf'```{escaped_language}\s*', '', code)
-        code = re.sub(r'\s*```\s*', '', code)
-        return code.strip()
     
     def parse_llm_response(self, response_text):
         """Parses LLM response to extract chain of thought and formatted code."""
@@ -74,7 +65,6 @@ class CodeGenerationPipeline:
                 else:
                     # Serialize test cases to dictionaries before passing to refine_code
                     test_cases_dict = [test_case.dict() for test_case in test_cases]
-                    current_code = self.generator.refine_code(model, language, question, current_code, execution_result.output, execution_result.stderror, execution_result.compiler_errors, test_cases_dict)
 
                 try:
                     cot, code = self.parse_llm_response(current_code)
@@ -106,7 +96,7 @@ class CodeGenerationPipeline:
                     ))
                 
                 # Pass test case results to the LLM for validation
-                test_results = self.generator.validate_test_cases(model, json.dumps([result.dict() for result in test_case_results]))
+                # test_results = self.generator.validate_test_cases(model, json.dumps([result.dict() for result in test_case_results]))
                 
                 # Store iteration history
                 history.append(CodeIterationHistory(
@@ -123,6 +113,8 @@ class CodeGenerationPipeline:
                     break
                 
                 iteration += 1
+
+                current_code = self.generator.refine_code(model, language, question, code, test_cases_dict, test_case_results)
             
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error occurred: {e}")

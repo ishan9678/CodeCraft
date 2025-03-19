@@ -6,6 +6,8 @@ from pipeline import CodeGenerationPipeline
 from dotenv import load_dotenv
 import os
 from db import save_question, save_iteration, save_test_case_results
+import fastapi
+from fastapi import FastAPI, HTTPException
 
 load_dotenv()
 
@@ -15,6 +17,8 @@ if not api_key:
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+
+app = FastAPI() # Initialize FastAPI
 
 LANGUAGE_MAPPING = {
     "Python": "python",

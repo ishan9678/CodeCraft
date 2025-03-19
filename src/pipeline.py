@@ -13,15 +13,6 @@ class CodeGenerationPipeline:
     def __init__(self, api_key: str, base_url: str, max_iterations: int = 3):
         self.generator = CodeGenerator(api_key=api_key, base_url=base_url)
         self.max_iterations = max_iterations
-
-    def clean_code(self, code: str, language: str) -> str:
-        """Remove Markdown formatting from the generated code."""
-        clean_response = re.sub(r'```(json)?\s*', '', code)
-        code = re.sub(r'\s*```\s*', '', clean_response)
-        escaped_language = re.escape(language)
-        code = re.sub(rf'```{escaped_language}\s*', '', code)
-        code = re.sub(r'\s*```\s*', '', code)
-        return code.strip()
     
     def parse_llm_response(self, response_text):
         """Parses LLM response to extract chain of thought and formatted code."""

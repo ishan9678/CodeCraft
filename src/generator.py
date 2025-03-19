@@ -34,14 +34,15 @@ class CodeGenerator:
         )
         return self.generate_response(prompt, model)
 
-    def refine_code(self, model:str, language: str, question: str, code: str, results: str, error: str, test_cases: List[Dict[str, Any]]) -> str:
+    def refine_code(self, model:str, language: str, question: str, code: str, results: str, stderror: str, compiler_errors: str, test_cases: List[Dict[str, Any]]) -> str:
         prompt = REFINE_PROMPT.format(
             language=language,
             question=question,
             code=code,
             results=results,
-            error=error,
-            test_cases=json.dumps(test_cases)  # Serialize test cases to JSON
+            stderror=stderror,
+            compiler_errors=compiler_errors,
+            test_cases=json.dumps(test_cases)
         )
         return self.generate_response(prompt, model)
 

@@ -18,9 +18,8 @@ const fontMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Iterative Code Generator",
+  title: "CodeCraft",
   description: "Generate optimized code solutions through iterative refinement",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

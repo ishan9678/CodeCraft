@@ -74,22 +74,35 @@ export function ResultsDisplay({ results }: ResultsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium mb-2">Chain of Thought</h3>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="cot">
-                <AccordionTrigger>View Reasoning Process</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-5 space-y-2">
-                    {results.cot.map((step, index) => (
-                      <li key={index} className="text-sm">
-                        {step}
-                      </li>
-                    ))}
-                  </ol>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+        <div className="space-y-3">
+            <h3 className="text-sm font-medium text-gray-600">Reasoning Process</h3>
+            <div className="border rounded-lg overflow-hidden">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="cot">
+                  <AccordionTrigger className="px-4 py-3 transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">Model's Thought Process</span>
+                      {/* Loading dots animation */}
+                      <div className="flex space-x-1">
+                        <div className="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                        <div className="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                        <div className="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 py-3 bg-[#27272a] border-t">
+                    <ol className="space-y-3">
+                      {results.cot.map((step, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
+                          <span className="text-sm text-gray-300">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </div>
 
           <div>
@@ -172,7 +185,7 @@ export function ResultsDisplay({ results }: ResultsProps) {
                       <TableCell className="font-mono">{test.actual_output}</TableCell>
                       <TableCell>
                         {test.passed ? (
-                          <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-100">
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
                             Passed
                           </Badge>
                         ) : (
@@ -202,13 +215,14 @@ export function ResultsDisplay({ results }: ResultsProps) {
                     <CardContent className="p-4 space-y-4">
                       <div>
                         <h4 className="font-medium mb-2">Reasoning</h4>
-                        <ol className="list-decimal pl-5 space-y-1">
-                          {iteration.chain_of_thought.map((step, index) => (
-                            <li key={index} className="text-sm">
-                              {step}
-                            </li>
-                          ))}
-                        </ol>
+                        <ol className="space-y-3">
+                      {results.cot.map((step, index) => (
+                        <li key={index} className="flex pl-1 items-start">
+                          <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
+                          <span className="text-sm text-gray-300">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
                       </div>
 
                       <div>
@@ -269,7 +283,7 @@ export function ResultsDisplay({ results }: ResultsProps) {
                                   <TableCell>
                                     {test.passed ? (
                                       <Badge
-                                        variant="success"
+                                        variant="secondary"
                                         className="bg-green-100 text-green-800 hover:bg-green-100"
                                       >
                                         Passed

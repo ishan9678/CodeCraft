@@ -9,6 +9,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface TestResult {
   input: string
@@ -53,7 +55,7 @@ interface ResultsProps {
   }
 }
 
-export function ResultsDisplay({ results }: ResultsProps) {
+export function ResultsDisplay({ results, language }: ResultsProps & { language: string }) {
   const [copied, setCopied] = useState(false)
 
   const copyToClipboard = () => {
@@ -130,7 +132,22 @@ export function ResultsDisplay({ results }: ResultsProps) {
               </Button>
             </div>
             <div className="relative rounded-md bg-muted p-4 overflow-x-auto">
-              <pre className="font-mono text-sm whitespace-pre">{results.final_code}</pre>
+              <SyntaxHighlighter
+                  language={language}
+                  style={oneDark}
+                  className="text-sm rounded-md font-mono"
+                  customStyle={{
+                    background: "transparent",
+                    padding: "0", 
+                    margin: "0", 
+                    fontSize: "0.875rem", 
+                    whiteSpace: "pre-wrap",
+                  }}
+                  showLineNumbers
+                  wrapLongLines
+                >
+                  {results.final_code}
+                </SyntaxHighlighter>
             </div>
           </div>
 
@@ -223,19 +240,33 @@ export function ResultsDisplay({ results }: ResultsProps) {
                       <div>
                         <h4 className="font-medium mb-2">Reasoning</h4>
                         <ol className="space-y-3">
-                      {results.cot.map((step, index) => (
-                        <li key={index} className="flex pl-1 items-start">
-                          <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
-                          <span className="text-sm text-gray-300">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
+                          {iteration.chain_of_thought.map((step, index) => (
+                            <li key={index} className="flex pl-1 items-start">
+                              <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
+                              <span className="text-sm text-gray-300">{step}</span>
+                            </li>
+                          ))}
+                        </ol>
                       </div>
 
                       <div>
                         <h4 className="font-medium mb-2">Code</h4>
                         <div className="relative rounded-md bg-muted p-4 overflow-x-auto">
-                          <pre className="font-mono text-sm whitespace-pre">{iteration.code}</pre>
+                          <SyntaxHighlighter
+                            language={language}
+                            style={oneDark}
+                            className="text-sm rounded-md font-mono"
+                            customStyle={{
+                              background: "transparent",
+                              padding: "0", 
+                              margin: "0", 
+                              fontSize: "0.875rem", 
+                              whiteSpace: "pre-wrap",
+                            }}
+                            wrapLongLines
+                          >
+                            {iteration.code}
+                          </SyntaxHighlighter>
                         </div>
                       </div>
 

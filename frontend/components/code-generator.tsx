@@ -53,6 +53,7 @@ const formSchema = z.object({
 export function CodeGenerator() {
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState(null)
+  const [language, setLanguage] = useState("python")
   const [error, setError] = useState("")
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,7 +82,7 @@ export function CodeGenerator() {
         max_iterations: values.maxIterations,
       }
 
-      console.log("Payload to send:", payload)
+      setLanguage(values.language)
 
       const response = await fetch("http://127.0.0.1:8000/run_pipeline", {
           method: "POST",
@@ -253,7 +254,7 @@ export function CodeGenerator() {
         </CardContent>
       </Card>
 
-      {results && <ResultsDisplay results={results} />}
+      {results && <ResultsDisplay results={results} language={language} />}
     </div>
   )
 }

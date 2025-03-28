@@ -66,12 +66,19 @@ export function ResultsDisplay({ results }: ResultsProps) {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Results</span>
-            <Badge variant={results.success ? "default" : "destructive"}>
-              {results.success ? "Success" : "Failed"}
-            </Badge>
-          </CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>Results</span>
+          <Badge
+            variant={results.success ? "default" : "destructive"}
+            className={
+              results.success
+                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                : "bg-red-100 text-red-800 hover:bg-red-200"
+            }
+          >
+            {results.success ? "Success" : "Failed"}
+          </Badge>
+        </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
         <div className="space-y-3">

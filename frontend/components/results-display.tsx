@@ -238,15 +238,15 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                   <Card>
                     <CardContent className="p-4 space-y-4">
                       <div>
-                        <h4 className="font-medium mb-2">Reasoning</h4>
-                        <ol className="space-y-3">
-                          {iteration.chain_of_thought.map((step, index) => (
+                          <h4 className="font-medium mb-2">Reasoning</h4>
+                          <ol className="space-y-3">
+                            {iteration.chain_of_thought.map((step, index) => (
                             <li key={index} className="flex pl-1 items-start">
-                              <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
-                              <span className="text-sm text-gray-300">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
+                                <span className="text-xs text-muted-foreground mr-2 mt-[2.5px]">{index + 1}.</span>
+                                <span className="text-sm text-foreground">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
                       </div>
 
                       <div>
@@ -263,6 +263,7 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                               fontSize: "0.875rem", 
                               whiteSpace: "pre-wrap",
                             }}
+                            showLineNumbers
                             wrapLongLines
                           >
                             {iteration.code}

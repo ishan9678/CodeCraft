@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Check, Copy, Clock, HardDrive } from "lucide-react"
+import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,6 +58,8 @@ interface ResultsProps {
 
 export function ResultsDisplay({ results, language }: ResultsProps & { language: string }) {
   const [copied, setCopied] = useState(false)
+  const { theme, resolvedTheme } = useTheme()
+  const currentTheme = theme === "system" ? resolvedTheme : theme
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(results.final_code)
@@ -99,12 +102,14 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                       </div>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 py-3 bg-[#27272a] border-t">
+                  <AccordionContent 
+                    className={`px-4 py-3 ${currentTheme === "dark" ? "bg-[#27272a] border-t border-gray-700" : "bg-gray-100 border-t border-gray-200"}`}
+                  >
                     <ol className="space-y-3">
                       {results.cot.map((step, index) => (
                         <li key={index} className="flex items-start">
                           <span className="text-xs text-gray-500 mr-2 mt-[2.5px]">{index + 1}.</span>
-                          <span className="text-sm text-gray-300">{step}</span>
+                          <span className={`text-sm ${currentTheme === "dark" ? "text-gray-300" : "text-gray-800"} `}>{step}</span>
                         </li>
                       ))}
                     </ol>
@@ -243,8 +248,8 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                             {iteration.chain_of_thought.map((step, index) => (
                             <li key={index} className="flex pl-1 items-start">
                                 <span className="text-xs text-muted-foreground mr-2 mt-[2.5px]">{index + 1}.</span>
-                                <span className="text-sm text-foreground">{step}</span>
-                              </li>
+                                <span className={`text-sm ${currentTheme === "dark" ? "text-gray-300" : "text-gray-800"} `}>{step}</span>
+                            </li>
                             ))}
                           </ol>
                       </div>

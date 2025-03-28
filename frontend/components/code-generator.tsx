@@ -72,8 +72,6 @@ export function CodeGenerator() {
     setError("")
 
     try {
-      // In a real application, this would be an actual API call
-      // For demo purposes, we'll simulate a response after a delay
       const payload = {
         model: values.model,
         language: values.language,
@@ -83,14 +81,22 @@ export function CodeGenerator() {
         max_iterations: values.maxIterations,
       }
 
-      console.log("Sending request:", payload)
+      console.log("Payload to send:", payload)
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Mock response for demonstration
-      const mockResponse = getMockResponse(values.language)
-      setResults(mockResponse)
+      const response = await fetch("http://127.0.0.1:8000/run_pipeline", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setResults(data.result);
     } catch (err) {
       console.error("Error generating code:", err)
       setError("Failed to generate code. Please try again.")
@@ -100,8 +106,8 @@ export function CodeGenerator() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-end">
+    <div >
+      <div className="flex justify-end mb-2">
         <ThemeToggle />
       </div>
 

@@ -10,6 +10,7 @@ import os
 from db import save_question, save_iteration, save_test_case_results
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -21,6 +22,14 @@ if not api_key:
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI() # Initialize FastAPI
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], # Allows requests from this origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 LANGUAGE_MAPPING = {
     "Python": "python",

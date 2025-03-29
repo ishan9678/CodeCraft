@@ -18,3 +18,4 @@ frontend/next-env.d.ts
 frontend/yarn.lock
 
 .env
+frontend/.env

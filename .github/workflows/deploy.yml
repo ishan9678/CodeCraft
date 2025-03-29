@@ -13,7 +13,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create deployment archive
-        run: tar -czf deployment.tar.gz --exclude=".git" --exclude=".github" .
+        run: |
+            tar -czf deployment.tar.gz \
+            --exclude=".git" \
+            --exclude=".github" \
+            --exclude="deployment.tar.gz" \
+            . || true
 
       - name: Prepare /tmp directory on server
         uses: appleboy/ssh-action@master

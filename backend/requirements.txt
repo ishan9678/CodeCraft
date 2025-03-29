@@ -7,3 +7,4 @@ alembic
 psycopg2-binary
 fastapi
 fastapi-cors
+uvicorn

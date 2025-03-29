@@ -1,0 +1,79 @@
+name: Deploy to Production
+
+on:
+    push:
+        branches: [ release ]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Create deployment archive
+              run: tar -czf deployment.tar.gz --exclude=".git" --exclude=".github" . 
+            
+            - name: Transfer to production
+              uses: appleboy/scp-action@master
+              with:
+                  host: ${{ secrets.SERVER_IP }}
+                  username: ${{ secrets.SERVER_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: "deployment.tar.gz"
+                  target: "/tmp"
+
+            - name: Deploy
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ secrets.SERVER_IP }}
+                  username: ${{ secrets.SERVER_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      # Ensure deployment directory exists
+                      mkdir -p /CodeCraft
+                      
+                      # Remove old deployment files
+                      rm -rf /CodeCraft/*
+                      
+                      # Extract new deployment files
+                      tar -xzf /tmp/deployment.tar.gz -C /CodeCraft
+                      
+                      # Create the .env file
+                      cat <<EOF > /CodeCraft/.env
+                      DATABASE_URL=${{ secrets.DATABASE_URL }}
+                      NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+                      POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+                      POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+                      POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+                      GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+                      COMPILER_API_ENDPOINT=${{ secrets.COMPILER_API_ENDPOINT }}
+                      CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+                      EOF
+                      echo "Created .env file"
+
+                      # Set environment variable for Docker Compose project name
+                      export COMPOSE_PROJECT_NAME=codecraft
+
+                      # Start Docker Compose services
+                      cd /CodeCraft
+                      docker-compose up -d --build --force-recreate
+
+                      # Verify deployment success
+                      if [ $? -eq 0 ]; then
+                          # Check running containers
+                          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running" | wc -l)
+                          EXPECTED_CONTAINERS=$(docker-compose ps --services | wc -l)
+                          
+                          if [ "$RUNNING_CONTAINERS" -eq "$EXPECTED_CONTAINERS" ]; then
+                              echo "✅ Deployment successful! All containers are running."
+                              exit 0
+                          else
+                              echo "❌ Deployment failed! Only $RUNNING_CONTAINERS out of $EXPECTED_CONTAINERS containers are running."
+                              exit 1
+                          fi
+                      else
+                          echo "❌ Docker Compose failed to start services."
+                          exit 1
+                      fi

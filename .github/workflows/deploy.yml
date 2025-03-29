@@ -78,3 +78,4 @@ jobs:
                 echo "❌ Deployment failed! Only $RUNNING_CONTAINERS out of $EXPECTED_CONTAINERS containers are running."
                 exit 1
             fi
+

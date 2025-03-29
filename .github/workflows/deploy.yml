@@ -10,57 +10,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Create deployment archive
-        run: |
-            tar -czf deployment.tar.gz \
-            --exclude=".git" \
-            --exclude=".github" \
-            --exclude="deployment.tar.gz" \
-            . || true
+        run: tar -czf deployment.tar.gz --exclude=".git" --exclude=".github" .
+
+      - name: Prepare /tmp directory on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /tmp
+            chmod 777 /tmp
+            ls -lah /tmp  # Debugging
 
       - name: Transfer to production
-        uses: appleboy/scp-action@v0.1.6
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "deployment.tar.gz"
           target: "/tmp"
-          rm: true  # Remove local file after transfer
+          overwrite: true
 
       - name: Deploy
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -euo pipefail
-            echo "=== Starting Deployment ==="
+            echo "🔹 Moving to deployment..."
+            mkdir -p /CodeCraft
+            rm -rf /CodeCraft/*
+            tar -xzf /tmp/deployment.tar.gz -C /CodeCraft
+            echo "✅ Extraction complete."
 
-            # Define deployment directory
-            DEPLOY_DIR="/CodeCraft"
-            TMP_ARCHIVE="/tmp/deployment.tar.gz"
-
-            # Create deployment directory
-            echo "🔹 Creating deployment directory..."
-            sudo mkdir -p $DEPLOY_DIR
-            sudo chown -R ${{ secrets.SERVER_USER }}: $DEPLOY_DIR
-
-            # Clean previous deployment
-            echo "🔹 Cleaning previous deployment..."
-            rm -rf $DEPLOY_DIR/*
-
-            # Extract new deployment
-            echo "🔹 Extracting new deployment..."
-            tar -xzf $TMP_ARCHIVE -C $DEPLOY_DIR
-            rm -f $TMP_ARCHIVE
-
-            # Create .env file
-            echo "🔹 Creating .env file..."
-            cat <<EOF > $DEPLOY_DIR/.env
+            echo "🔹 Writing .env file..."
+            cat <<EOF > /CodeCraft/.env
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -70,32 +60,22 @@ jobs:
             COMPILER_API_ENDPOINT=${{ secrets.COMPILER_API_ENDPOINT }}
             CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
             EOF
+            echo "✅ .env file created."
 
-            # Verify Docker availability
-            echo "🔹 Checking Docker..."
-            if ! command -v docker &> /dev/null; then
-              echo "❌ Docker not found!"
-              exit 1
-            fi
-
-            # Start containers
-            echo "🔹 Starting Docker containers..."
-            cd $DEPLOY_DIR
-            docker-compose down || true
+            echo "🔹 Setting up Docker Compose..."
+            export COMPOSE_PROJECT_NAME=codecraft
+            cd /CodeCraft
             docker-compose up -d --build --force-recreate
 
-            # Verify deployment
             echo "🔹 Verifying deployment..."
-            sleep 10  # Give containers time to start
-            RUNNING=$(docker-compose ps --services --filter "status=running" | wc -l)
-            TOTAL=$(docker-compose ps --services | wc -l)
+            RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running" | wc -l)
+            EXPECTED_CONTAINERS=$(docker-compose ps --services | wc -l)
 
-            if [ "$RUNNING" -eq "$TOTAL" ]; then
-              echo "✅ Deployment successful! ($RUNNING/$TOTAL containers running)"
+            if [ "$RUNNING_CONTAINERS" -eq "$EXPECTED_CONTAINERS" ]; then
+                echo "✅ Deployment successful! All containers are running."
+                exit 0
             else
-              echo "❌ Deployment failed! ($RUNNING/$TOTAL containers running)"
-              docker-compose logs
-              exit 1
+                echo "❌ Deployment failed! Only $RUNNING_CONTAINERS out of $EXPECTED_CONTAINERS containers are running."
+                exit 1
             fi
 
-            echo "=== Deployment Complete ==="

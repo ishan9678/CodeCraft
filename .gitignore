@@ -1,26 +1,19 @@
-llm-feedback-loop/
-.env
-src/migrations/__pycache__/
-src/migrations/alembic.ini
-src/migrations/versions/__pycache__
-src/__pycache__
+backend/llm-feedback-loop/
+backend/src/migrations/__pycache__/
+backend/src/migrations/alembic.ini
+backend/src/migrations/versions/__pycache__
+backend/src/__pycache__
 
-# dependencies
+# frontend
 frontend/node_modules
-
-# next.js
 frontend/.next/
 frontend/out/
-
-# production
 frontend/build
-
-# debug
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/.pnpm-debug.log*
-
-# typescript
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
+
+.env

@@ -9,8 +9,11 @@ echo "PostgreSQL is ready!"
 
 # Run Alembic migrations
 echo "Running database migrations..."
-alembic upgrade head
+alembic -c /app/src/alembic.ini upgrade head
+
+# Move into the `src` directory
+cd /app/src
 
 # Start the backend app
 echo "Starting FastAPI server..."
-exec gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 src.llama_agent:app
+exec gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 llama_agent:app

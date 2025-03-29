@@ -7,9 +7,6 @@ WORKDIR /app
 COPY package.json ./
 RUN yarn install --no-lockfile
 
-# Create .env file with API URL for Docker environment
-RUN echo "NEXT_PUBLIC_API_URL=http://backend:8000" > .env
-
 # Copy source files and build the app
 COPY . .
 RUN yarn build

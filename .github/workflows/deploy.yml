@@ -29,7 +29,6 @@ jobs:
           source: "deployment.tar.gz"
           target: "/tmp"
           rm: true  # Remove local file after transfer
-          key_path: "~/.ssh/id_rsa"
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3

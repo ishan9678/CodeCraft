@@ -14,13 +14,11 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          # Create archive excluding unnecessary files
-          tar -czf deployment.tar.gz \
+            tar -czf deployment.tar.gz \
             --exclude=".git" \
             --exclude=".github" \
             --exclude="deployment.tar.gz" \
-            --exclude="node_modules" \
-            .
+            . || true
 
       - name: Transfer to production
         uses: appleboy/scp-action@v0.1.6

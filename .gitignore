@@ -15,5 +15,6 @@ frontend/yarn-error.log*
 frontend/.pnpm-debug.log*
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
+frontend/yarn.lock
 
 .env

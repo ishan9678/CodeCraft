@@ -1,8 +1,9 @@
 from db_models import Base, engine, SessionLocal, Question, Iteration, TestCaseResult
 from sqlalchemy.orm import Session
 import uuid
+import datetime
 
-def save_question(model, question_text, explanation, user_input, language, max_iterations):
+def save_question(model, question_text, explanation, user_input, language, max_iterations, question_code=None):
     session = SessionLocal()
     try:
         question = Question(
@@ -12,7 +13,9 @@ def save_question(model, question_text, explanation, user_input, language, max_i
             explanation=explanation,
             user_input=user_input,
             language=language,
-            max_iterations=max_iterations
+            max_iterations=max_iterations,
+            question_code=question_code,
+            created_at=datetime.datetime.now().isoformat()
         )
         session.add(question)
         session.commit()

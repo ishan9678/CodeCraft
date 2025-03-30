@@ -67,6 +67,7 @@ class PipelineRequest(BaseModel):
     max_iterations: int = 3
     generate_test_cases: bool = True
     test_cases: Optional[List[TestCase]] = []
+    api_key: str
 
 @app.post("/run_pipeline")
 async def run_pipeline(data: PipelineRequest):

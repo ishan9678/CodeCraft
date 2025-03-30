@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2, Key } from "lucide-react"
+import { Loader2, Key, Info } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -54,6 +54,7 @@ const formSchema = z.object({
   model: z.string().min(1, "Please select a model"),
   language: z.string().min(1, "Please select a programming language"),
   question: z.string().min(10, "Question must be at least 10 characters"),
+  questionCode: z.string().optional(),
   explanation: z.string().optional(),
   userInput: z.string().min(1, "Please provide example input"),
   maxIterations: z.number().min(1).max(5),
@@ -66,13 +67,32 @@ export function CodeGenerator() {
   const [error, setError] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false)
+  const [showQuestionCode, setShowQuestionCode] = useState(false)
+  const [lastShiftPressTime, setLastShiftPressTime] = useState(0)
   
   useEffect(() => {
     const storedApiKey = localStorage.getItem("groqApiKey")
     if (storedApiKey) {
       setApiKey(storedApiKey)
     }
-  }, [])
+    
+    // Set up event listener for shift key
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        const currentTime = Date.now();
+        if (currentTime - lastShiftPressTime < 500) { // 500ms threshold for double press
+          setShowQuestionCode(true);
+        }
+        setLastShiftPressTime(currentTime);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lastShiftPressTime]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,6 +100,7 @@ export function CodeGenerator() {
       model: "llama-3.3-70b-specdec",
       language: "python",
       question: "",
+      questionCode: "",
       explanation: "",
       userInput: "",
       maxIterations: 3,
@@ -112,6 +133,7 @@ export function CodeGenerator() {
         model: values.model,
         language: values.language,
         question: values.question,
+        question_code: values.questionCode || "",
         explanation: values.explanation || "",
         user_input: values.userInput,
         max_iterations: values.maxIterations,
@@ -256,6 +278,28 @@ export function CodeGenerator() {
                   </FormItem>
                 )}
               />
+              
+              {showQuestionCode && (
+                <FormField
+                  control={form.control}
+                  name="questionCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Question Code (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder=""
+                          className="font-mono"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Only for internal use, please ignore this field.
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

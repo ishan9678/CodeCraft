@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, Float, Text, ARRAY
+from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, Float, Text, ARRAY, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 import uuid
@@ -31,6 +31,8 @@ class Question(Base):
     user_input = Column(String(255))
     language = Column(String(50))
     max_iterations = Column(Integer)
+    question_code = Column(Text)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     iterations = relationship("Iteration", back_populates="question", cascade="all, delete-orphan")
 

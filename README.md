@@ -40,7 +40,7 @@ The backend is built using **FastAPI** and utilizes **PostgreSQL** as its databa
 3. **Run database migrations:**
    ```sh
    cd backend/src
-   edit alembic.ini from script_location = src/migrations to script_location = migrations
+   # edit alembic.ini from script_location = src/migrations to script_location = migrations
    alembic upgrade head
    ```
 

@@ -73,7 +73,8 @@ async def run_pipeline(data: PipelineRequest):
             explanation=data.explanation,
             user_input=data.user_input,
             language=data.language,
-            max_iterations=data.max_iterations
+            max_iterations=data.max_iterations,
+            question_code=data.question_code,
         )
 
         pipeline = CodeGenerationPipeline(

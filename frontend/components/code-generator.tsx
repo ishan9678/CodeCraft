@@ -66,7 +66,6 @@ export function CodeGenerator() {
   const [error, setError] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false)
-  const [apiKeyError, setApiKeyError] = useState("")
   
   useEffect(() => {
     const storedApiKey = localStorage.getItem("groqApiKey")
@@ -89,18 +88,19 @@ export function CodeGenerator() {
 
   const saveApiKey = () => {
     if (!apiKey || apiKey.trim() === "") {
-      setApiKeyError("API key cannot be empty")
+      setError("API key cannot be empty")
       return
     }
     
     localStorage.setItem("groqApiKey", apiKey)
-    setApiKeyError("")
+    setError("")
     setIsApiKeyModalOpen(false)
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!apiKey) {
       setError("GROQ API key is required. Please add your API key first.")
+      setIsApiKeyModalOpen(true)
       return
     }
     
@@ -177,7 +177,6 @@ export function CodeGenerator() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
-              {apiKeyError && <p className="text-sm text-destructive">{apiKeyError}</p>}
             </div>
           </div>
           <DialogFooter>
@@ -323,8 +322,12 @@ export function CodeGenerator() {
                 )}
               </Button>
 
-              {error && <div className="p-4 bg-destructive/15 text-destructive rounded-md">{error}</div>}
-            </form>
+              {error && (
+                <div className="p-4 bg-red-500/20 text-red-600 dark:text-red-400 rounded-md">
+                  {error}
+                </div>
+              )}        
+             </form>
           </Form>
         </CardContent>
       </Card>

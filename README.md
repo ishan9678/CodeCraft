@@ -27,7 +27,7 @@ The backend is built using **FastAPI** and utilizes **PostgreSQL** as its databa
    ```
    - `COMPILER_API_ENDPOINT`: URL of Judge0 API (either self-hosted or from [RapidAPI](https://rapidapi.com/judge0-official/api/judge0-ce)).
    - `DATABASE_URL`: PostgreSQL database connection string.
-   - `CORS_ORIGINS`: Allowed origins for CORS.
+   - `CORS_ORIGINS`: Allowed origins for CORS ie http://localhost:3000 for frontend
 
 2. **Set up a Python virtual environment:**
    ```sh

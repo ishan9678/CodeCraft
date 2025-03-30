@@ -54,6 +54,11 @@ jobs:
             tar -xzf /tmp/deployment.tar.gz -C /CodeCraft
             echo "✅ Extraction complete."
 
+            echo "🔹 Writing frontend .env file..."
+            cat <<EOF > /CodeCraft/frontend/.env
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            EOF
+
             echo "🔹 Writing .env file..."
             cat <<EOF > /CodeCraft/.env
             DATABASE_URL=${{ secrets.DATABASE_URL }}

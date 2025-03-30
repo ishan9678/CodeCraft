@@ -16,7 +16,7 @@ FROM node:18-alpine as runner
 
 WORKDIR /app
 
-# Copy built files and .env from builder stage
+# Copy built files from builder stage
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/package.json package.json

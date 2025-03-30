@@ -1,9 +1,7 @@
 import streamlit as st
 import asyncio
 import logging
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from models import TestCase
+from models import PipelineRequest
 from pipeline import CodeGenerationPipeline
 from dotenv import load_dotenv
 import os
@@ -56,18 +54,6 @@ model_ids = [
     "mixtral-8x7b-32768",
     "gemma2-9b-it"
 ]
-
-
-class PipelineRequest(BaseModel):
-    model: str
-    language: str
-    question: str
-    explanation: Optional[str] = None
-    user_input: Optional[str] = None
-    max_iterations: int = 3
-    generate_test_cases: bool = True
-    test_cases: Optional[List[TestCase]] = []
-    api_key: str
 
 @app.post("/run_pipeline")
 async def run_pipeline(data: PipelineRequest):

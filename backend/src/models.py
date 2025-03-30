@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
 class TestCaseResult(BaseModel):
     input: str = Field(description="Input for the test case")
@@ -40,3 +40,14 @@ class PipelineResult(BaseModel):
     iterations: int = Field(description="Total number of iterations")
     history: List[CodeIterationHistory] = Field(description="History of all iterations")
     success: bool = Field(description="Whether the pipeline was successful")
+
+class PipelineRequest(BaseModel):
+    model: str
+    language: str
+    question: str
+    explanation: Optional[str] = None
+    user_input: Optional[str] = None
+    max_iterations: int = 3
+    generate_test_cases: bool = True
+    test_cases: Optional[List[TestCase]] = []
+    api_key: str

@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2 } from "lucide-react"
+import { Loader2, Key } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -15,6 +15,15 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ResultsDisplay } from "@/components/results-display"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const models = [
   "llama-3.3-70b-specdec",
@@ -55,6 +64,15 @@ export function CodeGenerator() {
   const [results, setResults] = useState(null)
   const [language, setLanguage] = useState("python")
   const [error, setError] = useState("")
+  const [apiKey, setApiKey] = useState("")
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false)
+  
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem("groqApiKey")
+    if (storedApiKey) {
+      setApiKey(storedApiKey)
+    }
+  }, [])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,7 +86,24 @@ export function CodeGenerator() {
     },
   })
 
+  const saveApiKey = () => {
+    if (!apiKey || apiKey.trim() === "") {
+      setError("API key cannot be empty")
+      return
+    }
+    
+    localStorage.setItem("groqApiKey", apiKey)
+    setError("")
+    setIsApiKeyModalOpen(false)
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!apiKey) {
+      setError("GROQ API key is required. Please add your API key first.")
+      setIsApiKeyModalOpen(true)
+      return
+    }
+    
     setIsLoading(true)
     setError("")
 
@@ -80,6 +115,7 @@ export function CodeGenerator() {
         explanation: values.explanation || "",
         user_input: values.userInput,
         max_iterations: values.maxIterations,
+        api_key: apiKey,
       }
 
       setLanguage(values.language)
@@ -108,10 +144,47 @@ export function CodeGenerator() {
   }
 
   return (
-    <div >
-      <div className="flex justify-end mb-2">
+    <div>
+      <div className="flex justify-between mb-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setIsApiKeyModalOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Key className="h-4 w-4" />
+          {apiKey ? "Update API Key" : "Add API Key"}
+        </Button>
         <ThemeToggle />
       </div>
+
+      {/* API Key Modal */}
+      <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>GROQ API Key</DialogTitle>
+            <DialogDescription>
+              Refer to <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] text-[16px] underline">groq console</a> for more details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="apiKey" className="text-sm font-medium">API Key</label>
+              <Input 
+                id="apiKey" 
+                type="password" 
+                placeholder="Enter your GROQ API key" 
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsApiKeyModalOpen(false)}>Cancel</Button>
+            <Button onClick={saveApiKey}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardContent className="pt-6">
@@ -249,8 +322,12 @@ export function CodeGenerator() {
                 )}
               </Button>
 
-              {error && <div className="p-4 bg-destructive/15 text-destructive rounded-md">{error}</div>}
-            </form>
+              {error && (
+                <div className="p-4 bg-red-500/20 text-red-600 dark:text-red-400 rounded-md">
+                  {error}
+                </div>
+              )}        
+             </form>
           </Form>
         </CardContent>
       </Card>

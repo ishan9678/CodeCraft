@@ -14,9 +14,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    raise ValueError("GROQ API KEY is not set")
+# api_key = os.getenv("GROQ_API_KEY")
+# if not api_key:
+#     raise ValueError("GROQ API KEY is not set")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -90,7 +90,7 @@ async def run_pipeline(data: PipelineRequest):
         )
 
         pipeline = CodeGenerationPipeline(
-            api_key=os.getenv("GROQ_API_KEY"),
+            api_key=data.api_key,
             base_url="https://api.groq.com/openai/v1",
             max_iterations=data.max_iterations
         )

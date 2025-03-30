@@ -51,3 +51,4 @@ class PipelineRequest(BaseModel):
     generate_test_cases: bool = True
     test_cases: Optional[List[TestCase]] = []
     api_key: str
+    question_code: Optional[str] = None

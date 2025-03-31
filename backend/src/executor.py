@@ -4,6 +4,7 @@ from models import CodeExecutionResult, TestCase
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -76,11 +77,24 @@ async def validate_test_cases(code: str, language: str, test_cases: List[TestCas
     test_results = []
     for test_case in test_cases:
         execution_result = await execute_code(code, language, test_case.input)
+
+        expected_output = test_case.expected_output.strip()
+        actual_output = execution_result.output.strip()
+
+        # Try parsing as JSON (lists, dicts) to compare structured data correctly
+        try:
+            expected_json = json.loads(expected_output)
+            actual_json = json.loads(actual_output)
+            passed = expected_json == actual_json  # Compare as parsed JSON
+        except json.JSONDecodeError:
+            # If not JSON, compare as normalized strings
+            passed = " ".join(actual_output.split()) == " ".join(expected_output.split())
+
         test_results.append({
             "input": test_case.input,
             "expected_output": test_case.expected_output,
             "actual_output": execution_result.output,
-            "passed": execution_result.output.strip() == test_case.expected_output.strip(),
+            "passed": passed,
             "stderror": execution_result.stderror,
             "compiler_errors": execution_result.compiler_errors,
             "time": execution_result.time,

@@ -12,7 +12,7 @@ CodeCraft is an AI-powered iterative code refinement tool that utilizes Large La
 - **Groq API Integration**: Users can input their Groq API key to interact with the application.
 
 ## Deployment
-Deployed URL: [http://139.59.68.177:3000/](http://139.59.68.177:3000/)
+Deployed URL: [https://www.codecraftai.tech](https://www.codecraftai.tech)
 
 ## Backend
 The backend is built using **FastAPI** and utilizes **PostgreSQL** as its database.
@@ -40,6 +40,7 @@ The backend is built using **FastAPI** and utilizes **PostgreSQL** as its databa
 3. **Run database migrations:**
    ```sh
    cd backend/src
+   # edit alembic.ini from script_location = src/migrations to script_location = migrations
    alembic upgrade head
    ```
 

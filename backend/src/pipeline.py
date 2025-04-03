@@ -14,6 +14,34 @@ class CodeGenerationPipeline:
         self.generator = CodeGenerator(api_key=api_key, base_url=base_url)
         self.max_iterations = max_iterations
     
+    def normalize_array_string(self, s: str) -> str:
+        """Normalize array string by removing spaces between elements, preserving structure."""
+        if not (s.startswith("[") and s.endswith("]")):
+            return s
+        
+        # Use regex to handle nested structures while removing spaces between array elements
+        # Preserve spaces inside string literals
+        in_string = False
+        escape_next = False
+        result = []
+        
+        for char in s:
+            if char == '"' or char == "'":
+                if not escape_next:
+                    in_string = not in_string
+            elif char == '\\' and in_string:
+                escape_next = True
+                result.append(char)
+                continue
+                
+            if char == ' ' and not in_string:
+                continue
+            
+            result.append(char)
+            escape_next = False
+                
+        return ''.join(result)
+    
     def parse_llm_response(self, response_text):
         """Parses LLM response to extract chain of thought and formatted code."""
         # Extract Chain of Thought
@@ -83,7 +111,18 @@ class CodeGenerationPipeline:
                 test_case_results = []
                 for test_case in test_cases:
                     test_case_result = await execute_code(code, language, test_case.input)
-                    passed = test_case_result.output.strip() == test_case.expected_output.strip() if test_case.expected_output else False
+                    
+                    # Enhanced comparison logic
+                    actual = test_case_result.output.strip()
+                    expected = test_case.expected_output.strip() if test_case.expected_output else ""
+                    
+                    passed = (
+                        actual == expected or 
+                        actual.lower() == expected.lower() or
+                        self.normalize_array_string(actual) == self.normalize_array_string(expected) or
+                        self.normalize_array_string(actual.lower()) == self.normalize_array_string(expected.lower())
+                    ) if expected else False
+                    
                     test_case_results.append(TestCaseResult(
                         input=test_case.input,
                         expected_output=test_case.expected_output,

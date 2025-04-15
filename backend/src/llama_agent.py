@@ -56,6 +56,8 @@ model_ids = [
     "Llama-4-Maverick-17B-128E-Instruct",
     "Llama-4-Scout-17B-16E-Instruct",
     "Meta-Llama-3.3-70B-Instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
 ]
 
 @app.post("/run_pipeline")

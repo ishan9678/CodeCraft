@@ -80,7 +80,7 @@ async def run_pipeline(data: PipelineRequest):
             question_code=data.question_code,
         )
 
-        if data.provider = "groq":
+        if data.provider == "groq":
             base_url = "https://api.groq.com/openai/v1"
         elif data.provider == "sambanova":
             base_url = "https://api.sambanova.ai/v1"

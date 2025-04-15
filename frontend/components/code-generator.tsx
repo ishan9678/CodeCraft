@@ -41,13 +41,13 @@ const providers = {
   },
   sambanova: {
     name: "SambaNova",
-    apiUrl: "https://sambanova.ai/console",
+    apiUrl: "https://cloud.sambanova.ai/",
     models: [
       "Llama-4-Maverick-17B-128E-Instruct",
       "Llama-4-Scout-17B-16E-Instruct",
       "Meta-Llama-3.3-70B-Instruct",
     ]
-  }
+  },
 }
 
 const languages = {

@@ -46,13 +46,16 @@ LANGUAGE_MAPPING = {
 }
 
 model_ids = [
-    "llama-3.3-70b-specdec",
+    "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
     "llama-3.2-3b-preview",
     "llama-3.1-70b-versatile",
     "llama3-70b-8192",
     "mixtral-8x7b-32768",
-    "gemma2-9b-it"
+    "gemma2-9b-it",
+    "Llama-4-Maverick-17B-128E-Instruct",
+    "Llama-4-Scout-17B-16E-Instruct",
+    "Meta-Llama-3.3-70B-Instruct",
 ]
 
 @app.post("/run_pipeline")
@@ -77,9 +80,14 @@ async def run_pipeline(data: PipelineRequest):
             question_code=data.question_code,
         )
 
+        if data.provider == "groq":
+            base_url = "https://api.groq.com/openai/v1"
+        elif data.provider == "sambanova":
+            base_url = "https://api.sambanova.ai/v1"
+
         pipeline = CodeGenerationPipeline(
             api_key=data.api_key,
-            base_url="https://api.groq.com/openai/v1",
+            base_url=base_url,
             max_iterations=data.max_iterations
         )
 

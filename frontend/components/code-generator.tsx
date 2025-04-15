@@ -15,25 +15,40 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ResultsDisplay } from "@/components/results-display"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const models = [
-  "llama-3.3-70b-specdec",
-  "llama-3.1-8b-instant",
-  "llama-3.2-3b-preview",
-  "llama-3.1-70b-versatile",
-  "llama3-70b-8192",
-  "mixtral-8x7b-32768",
-  "gemma2-9b-it",
-]
+const providers = {
+  groq: {
+    name: "GROQ",
+    apiUrl: "https://console.groq.com/keys",
+    models: [
+      "llama-3.3-70b-versatile",
+      "llama-3.1-8b-instant",
+      "llama-3.2-3b-preview",
+      "llama-3.1-70b-versatile",
+      "llama3-70b-8192",
+      "mixtral-8x7b-32768",
+      "gemma2-9b-it",
+    ]
+  },
+  sambanova: {
+    name: "SambaNova",
+    apiUrl: "https://cloud.sambanova.ai/",
+    models: [
+      "Llama-4-Maverick-17B-128E-Instruct",
+      "Llama-4-Scout-17B-16E-Instruct",
+      "Meta-Llama-3.3-70B-Instruct",
+    ]
+  },
+}
 
 const languages = {
   Python: "python",
@@ -51,6 +66,7 @@ const languages = {
 }
 
 const formSchema = z.object({
+  provider: z.string().min(1, "Please select a provider"),
   model: z.string().min(1, "Please select a model"),
   language: z.string().min(1, "Please select a programming language"),
   question: z.string().min(10, "Question must be at least 10 characters"),
@@ -69,13 +85,16 @@ export function CodeGenerator() {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false)
   const [showQuestionCode, setShowQuestionCode] = useState(false)
   const [lastShiftPressTime, setLastShiftPressTime] = useState(0)
-  
+  const [selectedProvider, setSelectedProvider] = useState<keyof typeof providers>("groq")
+
   useEffect(() => {
-    const storedApiKey = localStorage.getItem("groqApiKey")
+    const storedApiKey = localStorage.getItem(`${selectedProvider}ApiKey`)
     if (storedApiKey) {
       setApiKey(storedApiKey)
+    } else {
+      setApiKey("")
     }
-    
+
     // Set up event listener for shift key
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
@@ -86,18 +105,19 @@ export function CodeGenerator() {
         setLastShiftPressTime(currentTime);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [lastShiftPressTime]);
+  }, [lastShiftPressTime, selectedProvider]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      model: "llama-3.3-70b-specdec",
+      provider: "groq",
+      model: "llama-3.3-70b-versatile",
       language: "python",
       question: "",
       questionCode: "",
@@ -107,29 +127,47 @@ export function CodeGenerator() {
     },
   })
 
+  // Update model when provider changes
+  useEffect(() => {
+    const currentModel = form.getValues("model");
+    const availableModels = providers[selectedProvider].models;
+    
+    // Reset model if current model is not available in new provider
+    if (!availableModels.includes(currentModel)) {
+      form.setValue("model", availableModels[0]);
+    }
+    
+    form.setValue("provider", selectedProvider);
+  }, [selectedProvider, form]);
+
+  const handleProviderChange = (value: keyof typeof providers) => {
+    setSelectedProvider(value);
+  };
+
   const saveApiKey = () => {
     if (!apiKey || apiKey.trim() === "") {
       setError("API key cannot be empty")
       return
     }
-    
-    localStorage.setItem("groqApiKey", apiKey)
+
+    localStorage.setItem(`${selectedProvider}ApiKey`, apiKey)
     setError("")
     setIsApiKeyModalOpen(false)
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!apiKey) {
-      setError("GROQ API key is required. Please add your API key first.")
+      setError(`${providers[selectedProvider].name} API key is required. Please add your API key first.`)
       setIsApiKeyModalOpen(true)
       return
     }
-    
+
     setIsLoading(true)
     setError("")
 
     try {
       const payload = {
+        provider: values.provider,
         model: values.model,
         language: values.language,
         question: values.question,
@@ -144,17 +182,17 @@ export function CodeGenerator() {
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/run_pipeline`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setResults(data.result);
     } catch (err) {
@@ -168,15 +206,30 @@ export function CodeGenerator() {
   return (
     <div>
       <div className="flex justify-between mb-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setIsApiKeyModalOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Key className="h-4 w-4" />
-          {apiKey ? "Update API Key" : "Add API Key"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={selectedProvider} onValueChange={handleProviderChange}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Select provider" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(providers).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {providers[key as keyof typeof providers].name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsApiKeyModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Key className="h-4 w-4" />
+            {apiKey ? "Update API Key" : "Add API Key"}
+          </Button>
+        </div>
         <ThemeToggle />
       </div>
 
@@ -184,18 +237,18 @@ export function CodeGenerator() {
       <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>GROQ API Key</DialogTitle>
+            <DialogTitle>{providers[selectedProvider].name} API Key</DialogTitle>
             <DialogDescription>
-              Refer to <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] text-[16px] underline">groq console</a> for more details.
+              Refer to <a href={providers[selectedProvider].apiUrl} target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] text-[16px] underline">{providers[selectedProvider].name} console</a> for more details.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label htmlFor="apiKey" className="text-sm font-medium">API Key</label>
-              <Input 
-                id="apiKey" 
-                type="password" 
-                placeholder="Enter your GROQ API key" 
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder={`Enter your ${providers[selectedProvider].name} API key`}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
@@ -219,14 +272,14 @@ export function CodeGenerator() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Select AI Model</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a model" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {models.map((model) => (
+                          {providers[selectedProvider].models.map((model) => (
                             <SelectItem key={model} value={model}>
                               {model}
                             </SelectItem>
@@ -278,7 +331,7 @@ export function CodeGenerator() {
                   </FormItem>
                 )}
               />
-              
+
               {showQuestionCode && (
                 <FormField
                   control={form.control}
@@ -370,8 +423,8 @@ export function CodeGenerator() {
                 <div className="p-4 bg-red-500/20 text-red-600 dark:text-red-400 rounded-md">
                   {error}
                 </div>
-              )}        
-             </form>
+              )}
+            </form>
           </Form>
         </CardContent>
       </Card>

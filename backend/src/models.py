@@ -42,6 +42,7 @@ class PipelineResult(BaseModel):
     success: bool = Field(description="Whether the pipeline was successful")
 
 class PipelineRequest(BaseModel):
+    provider: str
     model: str
     language: str
     question: str

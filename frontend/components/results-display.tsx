@@ -209,9 +209,9 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                 <TableBody>
                   {results.test_results.map((test, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-mono">{test.input}</TableCell>
-                      <TableCell className="font-mono">{test.expected_output}</TableCell>
-                      <TableCell className="font-mono">{test.actual_output}</TableCell>
+                      <TableCell className="font-mono whitespace-pre-wrap">{test.input}</TableCell>
+                      <TableCell className="font-mono whitespace-pre-wrap">{test.expected_output}</TableCell>
+                      <TableCell className="font-mono whitespace-pre-wrap">{test.actual_output}</TableCell>
                       <TableCell>
                         {test.passed ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
@@ -321,9 +321,9 @@ export function ResultsDisplay({ results, language }: ResultsProps & { language:
                             <TableBody>
                               {iteration.test_results.map((test, index) => (
                                 <TableRow key={index}>
-                                  <TableCell className="font-mono">{test.input}</TableCell>
-                                  <TableCell className="font-mono">{test.expected_output}</TableCell>
-                                  <TableCell className="font-mono">{test.actual_output}</TableCell>
+                                  <TableCell className="font-mono whitespace-pre-wrap">{test.input}</TableCell>
+                                  <TableCell className="font-mono whitespace-pre-wrap">{test.expected_output}</TableCell>
+                                  <TableCell className="font-mono whitespace-pre-wrap">{test.actual_output}</TableCell>
                                   <TableCell>
                                     {test.passed ? (
                                       <Badge

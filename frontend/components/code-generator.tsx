@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2, Key, Info } from "lucide-react"
+import { Loader2, Key, Info, PlusCircle, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ResultsDisplay } from "@/components/results-display"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -76,7 +77,17 @@ const formSchema = z.object({
   explanation: z.string().optional(),
   userInput: z.string().min(1, "Please provide example input"),
   maxIterations: z.number().min(1).max(5),
+  generateTestCases: z.boolean(),
+  manualTestCases: z.array(
+    z.object({
+      input: z.string().min(1, "Input cannot be empty"),
+      expected_output: z.string().min(1, "Expected output cannot be empty")
+    })
+  ).optional(),
 })
+
+// Define type based on schema
+type FormValues = z.infer<typeof formSchema>;
 
 export function CodeGenerator() {
   const [isLoading, setIsLoading] = useState(false)
@@ -88,6 +99,7 @@ export function CodeGenerator() {
   const [showQuestionCode, setShowQuestionCode] = useState(false)
   const [lastShiftPressTime, setLastShiftPressTime] = useState(0)
   const [selectedProvider, setSelectedProvider] = useState<keyof typeof providers>("groq")
+  const [manualTestCaseError, setManualTestCaseError] = useState("");
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(`${selectedProvider}ApiKey`)
@@ -115,7 +127,7 @@ export function CodeGenerator() {
     };
   }, [lastShiftPressTime, selectedProvider]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       provider: "groq",
@@ -126,6 +138,8 @@ export function CodeGenerator() {
       explanation: "",
       userInput: "",
       maxIterations: 3,
+      generateTestCases: true,
+      manualTestCases: [{ input: "", expected_output: "" }],
     },
   })
 
@@ -157,7 +171,30 @@ export function CodeGenerator() {
     setIsApiKeyModalOpen(false)
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const addTestCase = () => {
+    const currentTestCases = form.getValues("manualTestCases") || [];
+    form.setValue("manualTestCases", [...currentTestCases, { input: "", expected_output: "" }]);
+  };
+
+  const removeTestCase = (index: number) => {
+    const currentTestCases = form.getValues("manualTestCases") || [];
+    if (currentTestCases.length > 1) {
+      form.setValue("manualTestCases", currentTestCases.filter((_, i) => i !== index));
+    } else {
+      setManualTestCaseError("At least one test case is required");
+    }
+  };
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (!value.generateTestCases && (!value.manualTestCases || value.manualTestCases.length === 0)) {
+        form.setValue("manualTestCases", [{ input: "", expected_output: "" }]);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  async function onSubmit(values: FormValues) {
     if (!apiKey) {
       setError(`${providers[selectedProvider].name} API key is required. Please add your API key first.`)
       setIsApiKeyModalOpen(true)
@@ -168,6 +205,11 @@ export function CodeGenerator() {
     setError("")
 
     try {
+      const testCases = values.generateTestCases ? [] : values.manualTestCases?.map(tc => ({
+        input: tc.input,
+        expected_output: tc.expected_output
+      })) || [];
+
       const payload = {
         provider: values.provider,
         model: values.model,
@@ -177,6 +219,8 @@ export function CodeGenerator() {
         explanation: values.explanation || "",
         user_input: values.userInput,
         max_iterations: values.maxIterations,
+        generate_test_cases: values.generateTestCases,
+        test_cases: testCases,
         api_key: apiKey,
       }
 
@@ -380,12 +424,13 @@ export function CodeGenerator() {
                   <FormItem>
                     <FormLabel>User Input Example</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Example user input (space-separated values)"
-                        className="font-mono"
+                      <Textarea
+                        placeholder="Example user input (supports multiple lines)"
+                        className="min-h-[80px] font-mono"
                         {...field}
                       />
                     </FormControl>
+                    <FormDescription>Enter example inputs, supports newlines</FormDescription>
                   </FormItem>
                 )}
               />
@@ -409,6 +454,105 @@ export function CodeGenerator() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="generateTestCases"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Auto-generate test cases
+                      </FormLabel>
+                      <FormDescription>
+                        Let AI create test cases for your code
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Manual Test Case Fields */}
+              {!form.watch("generateTestCases") && (
+                <div className="space-y-4 p-4 border rounded-md">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Manual Test Cases</h3>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={addTestCase}
+                      className="flex items-center gap-1"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Add Test Case
+                    </Button>
+                  </div>
+                  
+                  {manualTestCaseError && (
+                    <div className="p-2 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-md">
+                      {manualTestCaseError}
+                    </div>
+                  )}
+                  
+                  {form.watch("manualTestCases")?.map((_, index) => (
+                    <div key={index} className="p-3 border rounded-md space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium">Test Case {index + 1}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm" 
+                          onClick={() => removeTestCase(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name={`manualTestCases.${index}.input`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Input</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Test case input"
+                                className="font-mono"
+                                {...field}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`manualTestCases.${index}.expected_output`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Expected Output</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Expected output"
+                                className="font-mono"
+                                {...field}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

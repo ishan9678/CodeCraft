@@ -80,8 +80,8 @@ const formSchema = z.object({
   generateTestCases: z.boolean(),
   manualTestCases: z.array(
     z.object({
-      input: z.string().min(1, "Input cannot be empty"),
-      expected_output: z.string().min(1, "Expected output cannot be empty")
+      input: z.string(),
+      expected_output: z.string()
     })
   ).optional(),
 })
@@ -99,7 +99,6 @@ export function CodeGenerator() {
   const [showQuestionCode, setShowQuestionCode] = useState(false)
   const [lastShiftPressTime, setLastShiftPressTime] = useState(0)
   const [selectedProvider, setSelectedProvider] = useState<keyof typeof providers>("groq")
-  const [manualTestCaseError, setManualTestCaseError] = useState("");
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(`${selectedProvider}ApiKey`)
@@ -181,7 +180,7 @@ export function CodeGenerator() {
     if (currentTestCases.length > 1) {
       form.setValue("manualTestCases", currentTestCases.filter((_, i) => i !== index));
     } else {
-      setManualTestCaseError("At least one test case is required");
+      form.setValue("manualTestCases", [{ input: "", expected_output: "" }]);
     }
   };
 
@@ -494,12 +493,6 @@ export function CodeGenerator() {
                       Add Test Case
                     </Button>
                   </div>
-                  
-                  {manualTestCaseError && (
-                    <div className="p-2 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-md">
-                      {manualTestCaseError}
-                    </div>
-                  )}
                   
                   {form.watch("manualTestCases")?.map((_, index) => (
                     <div key={index} className="p-3 border rounded-md space-y-3">
